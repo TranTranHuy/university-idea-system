@@ -12,15 +12,21 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    //Khai báo đúng tên bảng trong database
+    protected $table = 'user';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'full_name',      
         'email',
         'password',
+        'role_id',        
+        'department_id',  
+        'is_agreed_terms'
     ];
 
     /**
