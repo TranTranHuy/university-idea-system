@@ -10,8 +10,16 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // Thêm dòng này để tắt kiểm tra CSRF cho 3 đường dẫn này
+        $middleware->validateCsrfTokens(except: [
+            'register',
+            'login',
+            'logout'
+        ]);
+        $middleware->alias([
+        'role' => \App\Http\Middleware\CheckRole::class,
+    ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
