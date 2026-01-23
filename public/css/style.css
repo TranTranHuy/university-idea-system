@@ -1,0 +1,158 @@
+/* style.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+}
+
+.container {
+    display: flex;
+    width: 900px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    min-height: 600px;
+}
+
+/* Chia cột 50-50 */
+.form-section, .image-section {
+    width: 50%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.image-section {
+    background-color: #f8f9fd; /* Màu nền nhẹ cho bên ảnh */
+    align-items: center;
+}
+
+.image-section img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.form-section h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.form-section p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #4a90e2;
+}
+
+/* Nút hiển thị mật khẩu (con mắt) */
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 38px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #888;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.options label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #666;
+}
+
+.options input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.options a {
+    text-decoration: none;
+    color: #ff6b6b;
+    font-weight: 500;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background-color: #4a6ef5; /* Màu xanh giống ảnh */
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #3b5bdb;
+}
+
+.footer-text {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #666;
+}
+
+.footer-text a {
+    text-decoration: none;
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+.error-msg {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}

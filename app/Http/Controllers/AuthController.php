@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
@@ -15,25 +15,22 @@ class AuthController extends Controller
         // Kiểm tra dữ liệu đầu vào
         $request->validate([
             'full_name' => 'required',
-            'email' => 'required|email|unique:user', // Check trùng email
+            'email' => 'required|email|unique:user',
             'password' => 'required|min:6',
         ]);
 
-        // Tạo User mới vào Database
-        $user = User::create([
+        // Tạo User mới
+        User::create([
             'full_name' => $request->full_name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Mã hóa password
-            'role_id' => 1,       // Mặc định là Admin (vì bạn vừa tạo ID 1 là Admin)
-            'department_id' => 1, // Mặc định là IT (vì bạn vừa tạo ID 1 là IT)
-            'is_agreed_terms' => 1 
+            'password' => Hash::make($request->password),
+            'role_id' => 1,       // Đảm bảo trong DB đã có Role ID 1
+            'department_id' => 1, // Đảm bảo trong DB đã có Dept ID 1
+            'is_agreed_terms' => 1
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Register Success! User ID: ' . $user->id,
-            'data' => $user
-        ]);
+        // 👇 ĐÃ SỬA: Chuyển hướng về trang login thay vì hiện JSON
+        return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.');
     }
 
     // --- 2. XỬ LÝ ĐĂNG NHẬP ---
@@ -46,17 +43,14 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Đăng nhập thành công!',
-                'user' => Auth::user()
-            ]);
+            // 👇 ĐÃ SỬA: Chuyển hướng về trang chủ
+            return redirect()->route('home');
         }
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Sai email hoặc mật khẩu!',
-        ], 401);
+        // 👇 ĐÃ SỬA: Trả về trang cũ kèm lỗi
+        return back()->withErrors([
+            'email' => 'Thông tin đăng nhập không chính xác.',
+        ]);
     }
 
     // --- 3. ĐĂNG XUẤT ---
@@ -65,6 +59,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return response()->json(['message' => 'Đã đăng xuất!']);
+        // Quay về trang login
+        return redirect()->route('login');
     }
 }

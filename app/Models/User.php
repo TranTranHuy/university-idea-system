@@ -15,17 +15,20 @@ class User extends Authenticatable
     //Khai báo đúng tên bảng trong database
     protected $table = 'user';
 
+    // 👇 THÊM DÒNG NÀY ĐỂ TẮT TÍNH NĂNG TỰ ĐỘNG LƯU THỜI GIAN
+    public $timestamps = false;
+
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'full_name',      
+        'full_name',
         'email',
         'password',
-        'role_id',        
-        'department_id',  
+        'role_id',
+        'department_id',
         'is_agreed_terms'
     ];
 

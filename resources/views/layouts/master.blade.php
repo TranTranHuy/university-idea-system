@@ -24,7 +24,7 @@
                     <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">All Ideas</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Departments</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-light text-primary ms-2 px-3" href="#">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-light text-primary ms-2 px-3" href="/login">Login</a></li>
                 </ul>
             </div>
         </div>
