@@ -20,7 +20,7 @@
                 <button class="btn btn-outline-light" type="button">View Latest</button>
             </div>
         </div>
-        
+
         <div class="col-md-6 mb-3">
             <div class="h-100 p-5 bg-body-tertiary border rounded-3 shadow-sm">
                 <h2>Most Popular</h2>
