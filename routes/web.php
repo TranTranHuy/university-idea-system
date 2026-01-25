@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IdeaController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\InteractionController;
 
 // --- 1. HIỂN THỊ FORM (Method GET) ---
 // 👇 Đây là 2 dòng bạn bị thiếu 👇
@@ -38,4 +39,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/ideas/{id}/like', [InteractionController::class, 'like'])->name('ideas.like');
+    Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
 });

@@ -5,19 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>University Idea System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <style>
         body { background-color: #f8f9fa; }
+
+        /* Cố định Navbar ở trên cùng và ưu tiên hiển thị cao nhất */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1050 !important; /* Cao hơn sticky-top của sidebar (1020) */
+        }
+
+        /* Đảm bảo menu con không bị bất kỳ thứ gì đè lên */
+        .dropdown-menu {
+            z-index: 2000 !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
         .footer { background-color: #343a40; color: white; padding: 20px 0; margin-top: 50px; }
         .hero-section { background-color: #e9ecef; border-radius: 0.3rem; }
-        /* Style cho nút Admin nổi bật hơn */
-        .nav-admin { background-color: #ffc107 !important; color: #000 !important; font-weight: bold; border-radius: 5px; }
+
+        /* Style cho nút Admin */
+        .nav-admin {
+            background-color: #ffc107 !important;
+            color: #000 !important;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .nav-admin:hover { background-color: #e0a800 !important; }
+
+        /* Sửa lỗi Sidebar có thể đè lên dropdown */
+        .sticky-top {
+            z-index: 1000 !important; /* Thấp hơn navbar */
+        }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">UIS SYSTEM</a>
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-lightbulb-fill"></i> UIS SYSTEM
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -31,7 +62,9 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('admin.categories.index') }}">Admin Panel</a>
+                        <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('admin.categories.index') }}">
+                            <i class="bi bi-shield-lock"></i> Admin Panel
+                        </a>
                     </li>
 
                     @guest
@@ -41,15 +74,17 @@
                     @else
                         <li class="nav-item dropdown ms-lg-3">
                             <a class="nav-link dropdown-toggle btn btn-outline-light px-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Hi, {{ Auth::user()->full_name }}
+                                <i class="bi bi-person-circle"></i> Hi, {{ Auth::user()->full_name }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                        </button>
                                     </form>
                                 </li>
                             </ul>
