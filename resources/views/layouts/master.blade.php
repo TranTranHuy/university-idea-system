@@ -69,7 +69,7 @@
 
                     @guest
                         <li class="nav-item">
-                            <a class="nav-link btn btn-light text-primary ms-lg-3 px-4" href="/login">Login</a>
+                            <a class="nav-link btn btn-primary text-white ms-lg-3 px-4" href="/login">Login</a>
                         </li>
                     @else
                         <li class="nav-item dropdown ms-lg-3">
