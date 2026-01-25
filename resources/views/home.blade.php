@@ -10,7 +10,7 @@
                         {{ substr(Auth::user()->full_name ?? 'U', 0, 1) }}
                     </div>
                     <a href="{{ route('ideas.create') }}" class="btn btn-light w-100 text-start rounded-pill text-muted shadow-none">
-                        Bạn có idea gì mới, {{ Auth::user()->full_name ?? 'Huy' }}?
+                        Bạn có idea gì mới, {{ Auth::user()->full_name ?? '...' }}?
                     </a>
                 </div>
             </div>
