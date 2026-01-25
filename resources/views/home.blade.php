@@ -50,19 +50,29 @@
                                 </a>
                             </div>
                         @endif
-                        <div class="d-flex gap-4 border-top pt-2 mt-3">
-                            <form action="{{ route('ideas.like', $idea->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-link p-0 text-decoration-none {{ Auth::user() && $idea->likes->contains('user_id', Auth::id()) ? 'text-primary' : 'text-muted' }}">
-                                    <i class="bi bi-hand-thumbs-up"></i>
-                                    {{ $idea->likes->count() }} Thích
-                                </button>
-                            </form>
 
-                            <button class="btn btn-link p-0 text-decoration-none text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ $idea->id }}">
-                                <i class="bi bi-chat"></i> {{ $idea->comments->count() }} Bình luận
-                            </button>
-                        </div>
+                        <div class="d-flex align-items-center gap-4 border-top pt-2 mt-3">
+    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 1]) }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-primary' : 'text-muted' }}">
+            <i class="bi bi-hand-thumbs-up{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? '-fill' : '' }} me-1"></i>
+            <span>{{ $idea->likes->where('type', 1)->count() }}</span>
+        </button>
+    </form>
+
+    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 0]) }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
+            <i class="bi bi-hand-thumbs-down{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? '-fill' : '' }} me-1"></i>
+            <span>{{ $idea->likes->where('type', 0)->count() }}</span>
+        </button>
+    </form>
+
+    <button class="btn btn-link p-0 text-decoration-none text-muted d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ $idea->id }}">
+        <i class="bi bi-chat-dots me-1"></i>
+        <span>{{ $idea->comments->count() }}</span>
+    </button>
+</div>
 
                         <div class="collapse mt-3" id="comments-{{ $idea->id }}">
                             <hr>

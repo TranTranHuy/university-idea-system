@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Like extends Model
 {
-    // Thêm dòng này để cho phép lưu user_id và idea_id
-    protected $fillable = ['user_id', 'idea_id'];
+   protected $fillable = ['user_id', 'idea_id', 'type'];
 
     // Đừng quên khai báo quan hệ nếu sau này cần dùng
     public function user() {

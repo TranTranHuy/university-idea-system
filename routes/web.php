@@ -42,6 +42,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('/ideas/{id}/like', [InteractionController::class, 'like'])->name('ideas.like');
+   
+Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
     Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
 });
