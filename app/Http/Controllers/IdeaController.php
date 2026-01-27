@@ -77,4 +77,31 @@ class IdeaController extends Controller
 
     return redirect()->route('home')->with('success', 'Idea submitted successfully!');
 }
+
+// Hàm hiển thị danh sách cho Admin
+public function adminIndex()
+{
+    // Lấy tất cả ý tưởng, kèm thông tin người đăng và danh mục
+    $ideas = \App\Models\Idea::with(['user', 'category'])->latest()->paginate(15);
+    return view('admin.ideas_manage', compact('ideas'));
+}
+
+// Hàm xử lý xóa ý tưởng
+public function adminDestroy($id)
+{
+    $idea = \App\Models\Idea::findOrFail($id);
+
+    // Kiểm tra và xóa file đính kèm trong storage để tránh rác server
+    if ($idea->document) {
+        $files = is_array($idea->document) ? $idea->document : json_decode($idea->document, true);
+        if ($files) {
+            foreach ($files as $file) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($file);
+            }
+        }
+    }
+
+    $idea->delete();
+    return redirect()->back()->with('success', 'Xóa ý tưởng thành công!');
+}
 }

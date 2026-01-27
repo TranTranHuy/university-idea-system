@@ -52,3 +52,9 @@ Route::get('/', [IdeaController::class, 'index'])->name('home');
 
 // Trang xem chi tiết một Idea
 Route::get('/ideas/{id}', [IdeaController::class, 'show'])->name('ideas.show');
+
+// Trang quản lý tất cả ý tưởng
+Route::get('/admin/manage-ideas', [App\Http\Controllers\IdeaController::class, 'adminIndex'])->name('admin.ideas.index');
+
+// Route xử lý xóa
+Route::delete('/admin/delete-idea/{id}', [App\Http\Controllers\IdeaController::class, 'adminDestroy'])->name('admin.ideas.destroy');

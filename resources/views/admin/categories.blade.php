@@ -2,6 +2,12 @@
 
 @section('content')
 <div class="container py-4">
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ route('admin.ideas.index') }}" class="btn btn-dark shadow-sm">
+            <i class="bi bi-kanban me-2"></i> Manage All Ideas
+        </a>
+    </div>
+
     <div class="row">
         <div class="col-md-4">
             <div class="card shadow-sm border-0">
@@ -45,7 +51,7 @@
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Delete</button>
                                     </form>
-                                </td>
+                                    </div> </td>
                             </tr>
                             @endforeach
                         </tbody>
