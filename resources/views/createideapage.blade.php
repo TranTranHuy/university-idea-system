@@ -24,7 +24,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('ideas.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('ideas.store') }}" method="POST" enctype="multipart/form-data" id="ideaForm">
                         @csrf
 
                         <div class="d-flex justify-content-between align-items-center mb-4 p-3 border rounded-3 bg-light">
@@ -56,13 +56,18 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Description</label>
-                            <textarea name="description" class="form-control" rows="6" placeholder="Describe your idea in detail..." required>{{ old('content') }}</textarea>
+                            <textarea name="content" class="form-control" rows="6" placeholder="Describe your idea in detail..." required>{{ old('content') }}</textarea>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Attachment (Optional)</label>
-                            <input type="file" name="document" class="form-control">
-                            <small class="text-muted">Accepted: pdf, docx, jpg, png (max 2MB)</small>
+                            <label class="form-label fw-bold">Attachments (Select multiple times if needed)</label>
+                            <input type="file" id="fileHelper" class="form-control shadow-none" multiple>
+
+                            <div id="hiddenFilesContainer" style="display: none;"></div>
+
+                            <div id="fileList" class="mt-3 d-flex flex-wrap gap-2">
+                                </div>
+                            <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
                         </div>
 
                         <div class="mb-4 form-check">
@@ -79,7 +84,7 @@
 </div>
 
 <script>
-    // Xử lý đổi tên hiển thị thời gian thực khi gạt nút
+    // 1. Xử lý đổi tên hiển thị thời gian thực
     const anonymousSwitch = document.getElementById('anonymousSwitch');
     const nameLabel = document.getElementById('displayAuthor');
     const realName = "{{ auth()->user()->full_name }}";
@@ -93,10 +98,67 @@
             nameLabel.classList.replace('text-secondary', 'text-success');
         }
     }
-
     anonymousSwitch.addEventListener('change', updateName);
 
-    // Gọi hàm một lần khi load trang để giữ trạng thái đúng nếu có lỗi validation quay lại
+    // 2. LOGIC QUẢN LÝ FILE CHỌN NHIỀU LẦN
+    const fileHelper = document.getElementById('fileHelper');
+    const fileList = document.getElementById('fileList');
+    const ideaForm = document.getElementById('ideaForm');
+
+    // Mảng ảo để lưu trữ tất cả file người dùng đã chọn qua các lần bấm
+    let allFiles = [];
+
+    fileHelper.addEventListener('change', function() {
+        const newFiles = Array.from(this.files);
+
+        // Cộng dồn vào danh sách hiện tại
+        allFiles = [...allFiles, ...newFiles];
+
+        renderFileList();
+        this.value = ''; // Reset input helper để có thể chọn lại file cũ nếu muốn
+    });
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        allFiles.forEach((file, index) => {
+            const badge = document.createElement('div');
+            badge.className = 'badge bg-light text-dark border p-2 rounded-2 d-flex align-items-center gap-2 fw-normal';
+            badge.style.fontSize = '0.75rem';
+
+            badge.innerHTML = `
+                <i class="bi bi-file-earmark-check text-primary"></i>
+                <span class="text-truncate" style="max-width: 120px;">${file.name}</span>
+                <i class="bi bi-x-circle-fill text-danger cursor-pointer" onclick="removeFile(${index})" style="cursor: pointer;"></i>
+            `;
+            fileList.appendChild(badge);
+        });
+    }
+
+    // Hàm xóa file khỏi danh sách cộng dồn
+    window.removeFile = function(index) {
+        allFiles.splice(index, 1);
+        renderFileList();
+    };
+
+    // Trước khi submit, đóng gói mảng allFiles vào một input file thực sự
+    ideaForm.addEventListener('submit', function(e) {
+        const container = document.getElementById('hiddenFilesContainer');
+        container.innerHTML = ''; // Clear cũ
+
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+
+        const realInput = document.createElement('input');
+        realInput.type = 'file';
+        realInput.name = 'documents[]'; // Đặt đúng tên để Controller nhận diện
+        realInput.multiple = true;
+        realInput.files = dataTransfer.files;
+
+        container.appendChild(realInput);
+    });
+
     window.onload = updateName;
 </script>
 @endsection

@@ -1,120 +1,159 @@
 @extends('layouts.master')
 
 @section('content')
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+    [x-cloak] { display: none !important; }
+    body { background-color: #f0f2f5; }
+
+    .idea-card-square {
+        min-height: 360px;
+        height: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s;
+        background: white;
+    }
+
+    .idea-card-square:hover {
+        transform: translateY(-5px);
+    }
+
+    .idea-content-box {
+        overflow-y: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .expanded-box {
+        -webkit-line-clamp: unset !important;
+        overflow-y: visible;
+    }
+</style>
+
 <div class="container py-4">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-4 border-0 shadow-sm p-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <div class="card mb-5 border-0 shadow-sm p-3 rounded-4">
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; flex-shrink: 0;">
                         {{ substr(Auth::user()->full_name ?? 'U', 0, 1) }}
                     </div>
-                    <a href="{{ route('ideas.create') }}" class="btn btn-light w-100 text-start rounded-pill text-muted shadow-none">
-                        Bạn có idea gì mới, {{ Auth::user()->full_name ?? '...' }}?
+                    <a href="{{ route('ideas.create') }}" class="btn btn-light w-100 text-start rounded-pill text-muted shadow-none py-2 px-4">
+                        Bạn có idea gì mới?
                     </a>
                 </div>
             </div>
 
-            @forelse($ideas as $idea)
-                <div class="card mb-3 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2">
-                            <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name={{ $idea->is_anonymous ? 'A' : ($idea->user->full_name ?? 'U') }}&background=random" class="rounded-circle me-2" width="40">
-                                <div>
-                                    <strong class="d-block">{{ $idea->is_anonymous ? 'Người dùng ẩn danh' : ($idea->user->full_name ?? 'Không tên') }}</strong>
-                                    <small class="text-muted">{{ $idea->created_at->diffForHumans() }}</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-info-subtle text-info rounded-pill px-3">{{ $idea->category->name ?? 'Chung' }}</span>
-                        </div>
+            <div class="row row-cols-1 row-cols-md-3 g-3">
+                @forelse($ideas as $idea)
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm idea-card-square rounded-4">
+                            <div class="card-body d-flex flex-column p-3">
 
-                        <h5 class="fw-bold">{{ $idea->title }}</h5>
-                        <p class="text-secondary">{{ $idea->content }}</p>
-
-                        @if($idea->document)
-                            <div class="mt-3 p-2 border rounded bg-light d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-file-earmark-arrow-down text-primary fs-4 me-2"></i>
-                                    <div>
-                                        <div class="small fw-bold text-dark text-truncate" style="max-width: 250px;">
-                                            {{ basename($idea->document) }}
-                                        </div>
-                                        <small class="text-muted">Tài liệu đính kèm</small>
-                                    </div>
-                                </div>
-                                <a href="{{ asset('storage/' . $idea->document) }}"
-                                   target="_blank"
-                                   class="btn btn-sm btn-primary px-3 shadow-sm">
-                                    <i class="bi bi-eye"></i> Xem / Tải về
-                                </a>
-                            </div>
-                        @endif
-
-                        <div class="d-flex align-items-center gap-4 border-top pt-2 mt-3">
-    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 1]) }}" method="POST">
-        @csrf
-        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-primary' : 'text-muted' }}">
-            <i class="bi bi-hand-thumbs-up{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? '-fill' : '' }} me-1"></i>
-            <span>{{ $idea->likes->where('type', 1)->count() }}</span>
-        </button>
-    </form>
-
-    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 0]) }}" method="POST">
-        @csrf
-        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
-            <i class="bi bi-hand-thumbs-down{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? '-fill' : '' }} me-1"></i>
-            <span>{{ $idea->likes->where('type', 0)->count() }}</span>
-        </button>
-    </form>
-
-    <button class="btn btn-link p-0 text-decoration-none text-muted d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ $idea->id }}">
-        <i class="bi bi-chat-dots me-1"></i>
-        <span>{{ $idea->comments->count() }}</span>
-    </button>
-</div>
-
-                        <div class="collapse mt-3" id="comments-{{ $idea->id }}">
-                            <hr>
-                            <div class="comment-list mb-3">
-                                @foreach($idea->comments as $comment)
-                                    <div class="d-flex mb-2">
-                                        <img src="https://ui-avatars.com/api/?name={{ $comment->user->full_name ?? 'Người dùng đã bị xóa' }}&size=30" class="rounded-circle me-2" width="30" height="30">
-                                        <div class="bg-light rounded p-2 flex-grow-1">
-                                            <strong class="small d-block">{{ $comment->user->full_name ?? 'Người dùng ẩn danh' }}</strong>
-                                            <span class="small text-secondary">{{ $comment->content }}</span>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="d-flex align-items-center overflow-hidden">
+                                        <img src="https://ui-avatars.com/api/?name={{ $idea->is_anonymous ? 'A' : ($idea->user->full_name ?? 'U') }}&background=random" class="rounded-circle me-2" width="35" height="35">
+                                        <div class="text-truncate">
+                                            <strong class="d-block small text-truncate">{{ $idea->is_anonymous ? 'Người dùng ẩn danh' : ($idea->user->full_name ?? 'Không tên') }}</strong>
+                                            <small class="text-muted" style="font-size: 0.7rem;">{{ $idea->created_at->diffForHumans() }}</small>
                                         </div>
                                     </div>
-                                @endforeach
-                            </div>
-
-                            <form action="{{ route('ideas.comment', $idea->id) }}" method="POST">
-                                @csrf
-                                <div class="input-group input-group-sm">
-                                    <input type="text" name="content" class="form-control" placeholder="Viết bình luận..." required>
-                                    <button class="btn btn-primary" type="submit">Gửi</button>
+                                    <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 align-self-start" style="font-size: 0.65rem;">{{ $idea->category->name ?? 'Chung' }}</span>
                                 </div>
-                            </form>
+
+                                <h6 class="fw-bold text-dark text-truncate mb-1">{{ $idea->title }}</h6>
+
+                                <div x-data="{ expanded: false }" class="flex-grow-1 mb-2">
+                                    <div class="text-secondary small idea-content-box" :class="expanded ? 'expanded-box' : ''" style="white-space: pre-line; font-size: 0.85rem;">
+                                        <span x-show="!expanded">{{ Str::limit($idea->content, 90) }}</span>
+                                        <span x-show="expanded" x-cloak>{{ $idea->content }}</span>
+                                    </div>
+                                    @if(strlen($idea->content) > 90)
+                                        <button @click="expanded = !expanded" class="btn btn-link p-0 fw-bold text-decoration-none small" style="font-size: 0.75rem;">
+                                            <span x-show="!expanded">Xem thêm</span>
+                                            <span x-show="expanded" x-cloak>Thu gọn</span>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                @if($idea->document)
+                                    @php
+                                        // Tự động ép kiểu về mảng để xử lý cho dù data là gì
+                                        $files = is_array($idea->document) ? $idea->document : (json_decode($idea->document, true) ?: [$idea->document]);
+                                    @endphp
+                                    <div class="mt-auto mb-2 py-1 px-2 bg-light border rounded">
+                                        <small class="text-muted d-block mb-1" style="font-size: 0.65rem;"><i class="bi bi-paperclip"></i> Tài liệu ({{ count((array)$files) }})</small>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach((array)$files as $index => $file)
+                                                @if($file)
+                                                <a href="{{ asset('storage/' . $file) }}" target="_blank" class="badge bg-white text-primary border text-decoration-none py-1 px-2 shadow-sm" style="font-size: 0.65rem;">
+                                                    File {{ $index + 1 }} <i class="bi bi-download ms-1"></i>
+                                                </a>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="mt-auto"></div>
+                                @endif
+
+                                <div class="d-flex align-items-center gap-3 border-top pt-2">
+                                    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 1]) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-primary' : 'text-muted' }}">
+                                            <i class="bi bi-hand-thumbs-up{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? '-fill' : '' }} me-1"></i>
+                                            <span class="small">{{ $idea->likes->where('type', 1)->count() }}</span>
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('ideas.like', ['id' => $idea->id, 'type' => 0]) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-link p-0 text-decoration-none d-flex align-items-center {{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
+                                            <i class="bi bi-hand-thumbs-down{{ Auth::user() && $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? '-fill' : '' }} me-1"></i>
+                                            <span class="small">{{ $idea->likes->where('type', 0)->count() }}</span>
+                                        </button>
+                                    </form>
+
+                                    <button class="btn btn-link p-0 text-decoration-none text-muted d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ $idea->id }}">
+                                        <i class="bi bi-chat-dots me-1"></i>
+                                        <span class="small">{{ $idea->comments->count() }}</span>
+                                    </button>
+                                </div>
+
+                                <div class="collapse" id="comments-{{ $idea->id }}">
+                                    <div class="mt-2 p-2 bg-light rounded" style="max-height: 120px; overflow-y: auto;">
+                                        @foreach($idea->comments as $comment)
+                                            <div class="small mb-1 border-bottom pb-1">
+                                                <strong style="font-size: 0.7rem;">{{ $comment->is_anonymous ? 'Ẩn danh' : ($comment->user->full_name ?? 'User') }}:</strong>
+                                                <span style="font-size: 0.75rem;">{{ $comment->content }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <form action="{{ route('ideas.comment', $idea->id) }}" method="POST" class="mt-2 pb-2">
+                                        @csrf
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" name="content" class="form-control" placeholder="Viết bình luận..." required>
+                                            <button class="btn btn-primary px-2" type="submit">Gửi</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
-                </div>
-            @empty
-                <p class="text-center text-muted">Chưa có ý tưởng nào được chia sẻ.</p>
-            @endforelse
-
-            <div class="d-flex justify-content-center">
-                {{ $ideas->links() }}
+                @empty
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Chưa có ý tưởng nào được chia sẻ.</p>
+                    </div>
+                @endforelse
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-white fw-bold border-0 py-3">Bộ lọc</div>
-                <div class="list-group list-group-flush border-top">
-                    <a href="{{ url('/?sort=latest') }}" class="list-group-item list-group-item-action">Mới nhất</a>
-                    <a href="{{ url('/?sort=popular') }}" class="list-group-item list-group-item-action">Phổ biến nhất</a>
-                    <a href="{{ url('/?sort=trending') }}" class="list-group-item list-group-item-action">Xu hướng</a>
-                </div>
+            <div class="d-flex justify-content-center my-5">
+                {{ $ideas->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>

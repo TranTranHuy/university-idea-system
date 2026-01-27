@@ -42,7 +42,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-   
+
 Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
     Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
+
 });
+// Trang chủ dùng hàm index để phân trang
+Route::get('/', [IdeaController::class, 'index'])->name('home');
+
+// Trang xem chi tiết một Idea
+Route::get('/ideas/{id}', [IdeaController::class, 'show'])->name('ideas.show');

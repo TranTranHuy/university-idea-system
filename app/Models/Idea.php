@@ -45,5 +45,8 @@ public function comments(): HasMany {
 public function isLikedBy($user) {
     return $this->likes()->where('user_id', $user->id)->exists();
 }
+protected $casts = [
+    'document' => 'array',
+];
 
 }

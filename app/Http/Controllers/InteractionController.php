@@ -42,16 +42,16 @@ class InteractionController extends Controller
     }
 
     // Giữ nguyên hàm comment của bạn
-    public function comment(Request $request, $id)
-    {
-        $request->validate(['content' => 'required']);
+    public function comment(Request $request, $id) {
+    $request->validate(['content' => 'required']);
 
-        Comment::create([
-            'user_id' => Auth::id(),
-            'idea_id' => $id,
-            'content' => $request->content
-        ]);
+    $idea = Idea::findOrFail($id);
+    $idea->comments()->create([
+        'user_id' => Auth::id(),
+        'content' => $request->content,
+        'is_anonymous' => $request->has('is_anonymous') ? 1 : 0, // Nhận giá trị từ checkbox
+    ]);
 
-        return back()->with('success', 'Bình luận thành công!');
-    }
+    return back();
+}
 }
