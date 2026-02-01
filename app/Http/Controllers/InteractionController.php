@@ -6,52 +6,63 @@ use App\Models\Idea;
 use App\Models\Like;
 use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth; // Đã có
+use Illuminate\Http\RedirectResponse; // Thêm dòng này nếu chưa có
 
 class InteractionController extends Controller
 {
-    // Xử lý Like và Dislike chung trong một hàm
-    public function like($id, $type)
+    public function like(Request $request, $id, $type): RedirectResponse
+
     {
-        $idea = Idea::findOrFail($id);
+        // 1. Dùng Auth::check() thay vì auth()->check() để hết bôi đỏ
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tương tác!');
+        }
+
+        // 2. Dùng Auth::id() thay vì auth()->id()
         $userId = Auth::id();
 
-        // Kiểm tra xem người dùng đã từng Like hoặc Dislike bài này chưa
-        $existingInteraction = Like::where('idea_id', $id)
-                                   ->where('user_id', $userId)
+        $existingInteraction = Like::where('user_id', $userId)
+                                   ->where('idea_id', $id)
                                    ->first();
 
         if ($existingInteraction) {
-            // Nếu bấm lại cùng một nút (ví dụ đang like mà bấm lại like) thì XÓA
             if ($existingInteraction->type == $type) {
                 $existingInteraction->delete();
+                $msg = "Đã hủy tương tác!";
             } else {
-                // Nếu đang Like mà bấm Dislike (hoặc ngược lại) thì CẬP NHẬT loại
                 $existingInteraction->update(['type' => $type]);
+                $msg = ($type == 1) ? "Đã chuyển sang Thích!" : "Đã chuyển sang Không thích!";
             }
         } else {
-            // Nếu chưa có tương tác nào thì TẠO MỚI
+            // Dòng 34 gây lỗi Error 500 nếu $userId rỗng
             Like::create([
                 'user_id' => $userId,
                 'idea_id' => $id,
-                'type' => $type // 1 cho Like, 0 cho Dislike
+                'type'    => $type
             ]);
+            $msg = ($type == 1) ? "Đã thích ý tưởng!" : "Đã không thích ý tưởng!";
         }
 
-        return back();
+        return back()->with('success', $msg);
+
+
     }
 
-    // Giữ nguyên hàm comment của bạn
-    public function comment(Request $request, $id) {
-    $request->validate(['content' => 'required']);
+
+
+    public function comment(Request $request, $id)
+{
+    $request->validate(['content' => 'required|max:1000']);
 
     $idea = Idea::findOrFail($id);
+
     $idea->comments()->create([
         'user_id' => Auth::id(),
-        'content' => $request->content,
-        'is_anonymous' => $request->has('is_anonymous') ? 1 : 0, // Nhận giá trị từ checkbox
+        'content' => $request->input('content'),
+        'is_anonymous' => $request->has('is_anonymous'), // Laravel sẽ tự hiểu true/false là 1/0
     ]);
 
-    return back();
+    return back()->with('success', 'Bình luận thành công!');
 }
 }

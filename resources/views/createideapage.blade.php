@@ -70,10 +70,19 @@
                             <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
                         </div>
 
-                        <div class="mb-4 form-check">
-                            <input type="checkbox" name="terms" class="form-check-input" id="checkTerms" required>
-                            <label class="form-check-label small" for="checkTerms">I agree to the Terms and Conditions</label>
-                        </div>
+                        <div class="form-check mt-3">
+    <input type="checkbox" name="agree" id="agree" required class="form-check-input">
+    <label class="form-check-label" for="agree">
+        I agree to all the
+        <a href="{{ route('terms.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Terms
+        </a>
+        and
+        <a href="{{ route('privacy.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Privacy Policies
+        </a>
+    </label>
+</div>
 
                         <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">SUBMIT IDEA</button>
                     </form>
@@ -91,7 +100,7 @@
 
     function updateName() {
         if(anonymousSwitch.checked) {
-            nameLabel.innerText = "Anonymous (Người dùng ẩn danh)";
+            nameLabel.innerText = "Anonymous (Anonymous)";
             nameLabel.classList.replace('text-success', 'text-secondary');
         } else {
             nameLabel.innerText = realName;
@@ -158,6 +167,7 @@
 
         container.appendChild(realInput);
     });
+
 
     window.onload = updateName;
 </script>

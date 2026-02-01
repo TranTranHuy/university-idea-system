@@ -58,3 +58,22 @@ Route::get('/admin/manage-ideas', [App\Http\Controllers\IdeaController::class, '
 
 // Route xử lý xóa
 Route::delete('/admin/delete-idea/{id}', [App\Http\Controllers\IdeaController::class, 'adminDestroy'])->name('admin.ideas.destroy');
+
+Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
+Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
+Route::get('/terms', function () {
+    return view('terms'); // Tạo file terms.blade.php trong resources/views
+})->name('terms.show');
+
+// Khai báo Route cho trang Terms
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms.index');
+
+Route::get('/idea/like/{id}/{type}', [InteractionController::class, 'like'])->name('idea.like');
+
+// Khai báo Route cho trang Privacy
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy.index');
+Route::post('/ideas/{id}/comment', [IdeaController::class, 'storeComment'])->name('comments.store');

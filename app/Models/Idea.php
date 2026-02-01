@@ -37,6 +37,7 @@ public function likes(): HasMany {
     return $this->hasMany(Like::class, 'idea_id');
 }
 
+
 // Một ý tưởng có nhiều bình luận
 public function comments(): HasMany {
     return $this->hasMany(Comment::class);

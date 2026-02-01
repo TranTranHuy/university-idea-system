@@ -62,4 +62,5 @@ class AuthController extends Controller
         // Quay về trang login
         return redirect()->route('login');
     }
+
 }

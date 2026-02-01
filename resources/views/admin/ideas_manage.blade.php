@@ -27,7 +27,7 @@
                                     {{ substr($idea->user->full_name ?? 'U', 0, 1) }}
                                 </div>
                                 <div>
-                                    <div class="fw-bold small">{{ $idea->is_anonymous ? 'Ẩn danh' : ($idea->user->full_name ?? 'Không tên') }}</div>
+                                    <div class="fw-bold small">{{ $idea->is_anonymous ? 'Anonymous' : ($idea->user->full_name ?? 'Không tên') }}</div>
                                     <div class="text-muted small" style="font-size: 0.7rem;">{{ $idea->created_at->diffForHumans() }}</div>
                                 </div>
                             </div>

@@ -59,12 +59,19 @@
                     </div>
                 </div>
 
-                <div class="options">
-                    <label>
-                        <input type="checkbox" name="is_agreed_terms" id="is_agreed_terms" required>
-                        I agree to all the Terms and Privacy Policies
-                    </label>
-                </div>
+                <div class="form-check mt-3">
+    <input type="checkbox" name="agree" id="agree" required class="form-check-input">
+    <label class="form-check-label" for="agree">
+        I agree to all the
+        <a href="{{ route('terms.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Terms
+        </a>
+        and
+        <a href="{{ route('privacy.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Privacy Policies
+        </a>
+    </label>
+</div>
 
                 <button type="submit" class="btn-submit">Create account</button>
 
