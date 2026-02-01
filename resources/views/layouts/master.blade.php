@@ -62,7 +62,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('admin.categories.index') }}">
+                        <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('qam.categories.index') }}">
                             <i class="bi bi-shield-lock"></i> Admin Panel
                         </a>
                     </li>

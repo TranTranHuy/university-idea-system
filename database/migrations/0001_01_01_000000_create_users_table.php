@@ -11,18 +11,31 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Bảng user (Số ít theo logic của bạn)
+        // 1. Tên bảng là 'user' 
         Schema::create('user', function (Blueprint $table) {
             $table->id();
-            // Đổi 'name' thành 'full_name' để khớp với Form đăng ký của bạn
-            $table->string('full_name');
+            
+            $table->string('full_name'); // Khớp form đăng ký
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
-            // Bổ sung các cột mà Controller đang yêu cầu
-            $table->unsignedBigInteger('role_id')->default(1)->comment('1: Staff, 2: Admin, ...');
+            // --- PHẦN LIÊN KẾT KHÓA NGOẠI ---
+
+            // 2. role_id -> Trỏ vào bảng 'roles' 
+            $table->unsignedBigInteger('role_id')->default(1)->comment('1: Staff, 2: Admin...');
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles') 
+                ->onDelete('cascade');
+
+            // 3. department_id -> Trỏ vào bảng 'departments' 
             $table->unsignedBigInteger('department_id')->nullable();
+            $table->foreign('department_id')
+                ->references('id')
+                ->on('departments') 
+                ->onDelete('set null');
+
             $table->boolean('is_agreed_terms')->default(false);
 
             $table->rememberToken();

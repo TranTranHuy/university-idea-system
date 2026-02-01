@@ -65,7 +65,8 @@ class IdeaController extends Controller
     $idea = new Idea();
     $idea->user_id = \Illuminate\Support\Facades\Auth::id();
     $idea->title = $request->title;
-    $idea->content = $request->content; // Đảm bảo name trong form là 'content'
+    // $idea->content = $request->content; // Đảm bảo name trong form là 'content'
+    $idea->content = $request->input('content');
     $idea->category_id = $request->category_id;
     $idea->is_anonymous = $request->has('is_anonymous');
 
@@ -104,4 +105,55 @@ public function adminDestroy($id)
     $idea->delete();
     return redirect()->back()->with('success', 'Xóa ý tưởng thành công!');
 }
+
+// --- TÍNH NĂNG MỚI: EXPORT CSV (Dành cho QA Manager) ---
+    public function exportCsv()
+    {
+        $fileName = 'ideas_export_' . date('Y-m-d_H-i') . '.csv';
+
+        // 1. Lấy dữ liệu: Kèm theo User (và Department của User đó), Category
+        // Lưu ý: 'user.department' yêu cầu trong Model User phải có function department()
+        $ideas = Idea::with(['user.department', 'category'])->latest()->get();
+
+        // 2. Cấu hình Header để trình duyệt hiểu đây là file tải về
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        // 3. Tạo luồng ghi dữ liệu (Stream)
+        $callback = function() use($ideas) {
+            $file = fopen('php://output', 'w');
+
+            // Hàng tiêu đề (Header Row)
+            fputcsv($file, ['ID', 'Title', 'Content', 'Author Name', 'Department', 'Category', 'Submission Date']);
+
+            // Vòng lặp dữ liệu
+            foreach ($ideas as $idea) {
+                fputcsv($file, [
+                    $idea->id,
+                    $idea->title,
+                    $idea->content,
+                    // Xử lý logic Ẩn danh: Nếu anonymous thì Admin/QAM có thấy tên thật không? 
+                    // Thường báo cáo nội bộ thì vẫn hiện tên thật, tùy bạn quyết định.
+                    $idea->is_anonymous ? $idea->user->full_name . ' (Anonymous)' : $idea->user->full_name,
+                    
+                    // Lấy tên phòng ban (Dùng toán tử ?? để tránh lỗi nếu null)
+                    $idea->user->department->department_name ?? 'No Dept',
+                    
+                    // Lấy tên category (Check kỹ trong Model Category của bạn là 'name' hay 'category_name')
+                    $idea->category->name ?? $idea->category->category_name ?? 'Uncategorized',
+                    
+                    $idea->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
 }

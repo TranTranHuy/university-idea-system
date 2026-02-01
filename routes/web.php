@@ -6,55 +6,59 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IdeaController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\InteractionController;
+use App\Http\Controllers\Admin\AcademicYearController; // <--- Nhớ import cái này
 
-// --- 1. HIỂN THỊ FORM (Method GET) ---
-// 👇 Đây là 2 dòng bạn bị thiếu 👇
+// --- 1. AUTHENTICATION (Đăng ký/Đăng nhập) ---
 Route::get('/register', function () { return view('register'); })->name('register');
 Route::get('/login', function () { return view('login'); })->name('login');
-
-// --- 2. XỬ LÝ DỮ LIỆU (Method POST) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// --- 3. CÁC TRANG KHÁC ---
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Chỉ Admin mới vào được dashboard
-Route::get('/admin/dashboard', function() {
-    return "Chào mừng sếp Admin!";
-})->middleware(['auth', 'role:admin']);
-
-Route::get('/test-admin', function() {
-    return "<h1>Chào sếp Admin! (Nếu thấy dòng này là vào được)</h1>";
-})->middleware(['auth', 'role:admin']);
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/create-idea', [IdeaController::class, 'create'])->name('ideas.create');
-    Route::post('/create-idea', [IdeaController::class, 'store'])->name('ideas.store');
-});
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
-    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
-    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
-});
-
-Route::middleware(['auth'])->group(function () {
-
-Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
-    Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
-
-});
-// Trang chủ dùng hàm index để phân trang
+// --- 2. PUBLIC ROUTES (Ai cũng xem được) ---
 Route::get('/', [IdeaController::class, 'index'])->name('home');
-
-// Trang xem chi tiết một Idea
 Route::get('/ideas/{id}', [IdeaController::class, 'show'])->name('ideas.show');
 
-// Trang quản lý tất cả ý tưởng
-Route::get('/admin/manage-ideas', [App\Http\Controllers\IdeaController::class, 'adminIndex'])->name('admin.ideas.index');
+// --- 3. LOGGED IN USERS (Phải đăng nhập mới làm được) ---
+Route::middleware(['auth'])->group(function () {
+    // Nộp Idea
+    Route::get('/create-idea', [IdeaController::class, 'create'])->name('ideas.create');
+    Route::post('/create-idea', [IdeaController::class, 'store'])->name('ideas.store');
+    
+    // Tương tác (Like/Comment)
+    Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
+    Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');
+});
 
-// Route xử lý xóa
-Route::delete('/admin/delete-idea/{id}', [App\Http\Controllers\IdeaController::class, 'adminDestroy'])->name('admin.ideas.destroy');
+// --- 4. KHU VỰC CẤM (Phân quyền Admin/QAM) ---
+
+/**
+ * GROUP 1: Dành cho QA MANAGER
+ * Nhiệm vụ: Quản lý Category, Download CSV
+ */
+Route::middleware(['auth', 'role:qam'])->prefix('qa-manager')->name('qam.')->group(function () {
+    // Quản lý Categories
+    Route::resource('categories', CategoryController::class);
+    // (Lệnh resource ở trên tự tạo ra index, store, update, destroy... cho gọn code)
+
+    // Export CSV (Route bạn mới thêm logic lúc nãy)
+    Route::get('/export-csv', [IdeaController::class, 'exportCsv'])->name('ideas.export');
+});
+
+/**
+ * GROUP 2: Dành cho ADMIN
+ * Nhiệm vụ: Quản lý User, Deadline (Academic Year)
+ */
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard Admin
+    Route::get('/dashboard', function() { return view('admin.dashboard'); })->name('dashboard');
+    
+    // Quản lý Idea (Xóa bài vi phạm)
+    Route::get('/manage-ideas', [IdeaController::class, 'adminIndex'])->name('ideas.index');
+    Route::delete('/delete-idea/{id}', [IdeaController::class, 'adminDestroy'])->name('ideas.destroy');
+
+    // Quản lý Deadline (Academic Year) - Sprint 3
+    Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('academic-years.index');
+    Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('academic-years.store');
+    Route::delete('/academic-years/{id}', [AcademicYearController::class, 'destroy'])->name('academic-years.delete');
+});
