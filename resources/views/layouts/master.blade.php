@@ -41,15 +41,15 @@
         .footer { background-color: #343a40; color: white; padding: 20px 0; margin-top: 50px; }
         .hero-section { background-color: #e9ecef; border-radius: 0.3rem; }
 
-        /* Style cho nút Admin */
-        .nav-admin {
+        /* Style cho nút qa_manager */
+        .nav-qa_manager {
             background-color: #ffc107 !important;
             color: #000 !important;
             font-weight: bold;
             border-radius: 5px;
             transition: 0.3s;
         }
-        .nav-admin:hover { background-color: #e0a800 !important; }
+        .nav-qa_manager:hover { background-color: #e0a800 !important; }
 
         /* Sửa lỗi Sidebar có thể đè lên dropdown */
         .sticky-top {
@@ -77,8 +77,8 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('admin.categories.index') }}">
-                            <i class="bi bi-shield-lock"></i> Admin Panel
+                        <a class="nav-link nav-qa_manager ms-lg-2 px-3" href="{{ route('qa_manager.categories.index') }}">
+                            <i class="bi bi-shield-lock"></i> QA Manager Panel
                         </a>
                     </li>
 

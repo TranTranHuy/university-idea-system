@@ -8,7 +8,7 @@
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-4 text-primary">Edit Category</h5>
 
-                    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST">
+                    <form action="{{ route('qa_manager.categories.update', $category->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -19,7 +19,7 @@
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary px-4">Save Changes</button>
-                            <a href="{{ route('admin.categories.index') }}" class="btn btn-light px-4">Cancel</a>
+                            <a href="{{ route('qa_manager.categories.index') }}" class="btn btn-light px-4">Cancel</a>
                         </div>
                     </form>
                 </div>

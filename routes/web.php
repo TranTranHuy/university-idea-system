@@ -20,20 +20,20 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // --- 3. CÁC TRANG KHÁC ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Chỉ Admin mới vào được dashboard
-Route::get('/admin/dashboard', function() {
-    return "Chào mừng sếp Admin!";
-})->middleware(['auth', 'role:admin']);
+// Chỉ qa_manager mới vào được dashboard
+Route::get('/qa_manager/dashboard', function() {
+    return "Chào mừng sếp qa_manager!";
+})->middleware(['auth', 'role:qa_manager']);
 
-Route::get('/test-admin', function() {
-    return "<h1>Chào sếp Admin! (Nếu thấy dòng này là vào được)</h1>";
-})->middleware(['auth', 'role:admin']);
+Route::get('/test-qa_manager', function() {
+    return "<h1>Chào sếp qa_manager! (Nếu thấy dòng này là vào được)</h1>";
+})->middleware(['auth', 'role:qa_manager']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/create-idea', [IdeaController::class, 'create'])->name('ideas.create');
     Route::post('/create-idea', [IdeaController::class, 'store'])->name('ideas.store');
 });
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('qa_manager')->name('qa_manager.')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
@@ -54,10 +54,10 @@ Route::get('/', [IdeaController::class, 'index'])->name('home');
 Route::get('/ideas/{id}', [IdeaController::class, 'show'])->name('ideas.show');
 
 // Trang quản lý tất cả ý tưởng
-Route::get('/admin/manage-ideas', [App\Http\Controllers\IdeaController::class, 'adminIndex'])->name('admin.ideas.index');
+Route::get('/qa_manager/manage-ideas', [App\Http\Controllers\IdeaController::class, 'qa_managerIndex'])->name('qa_manager.ideas.index');
 
 // Route xử lý xóa
-Route::delete('/admin/delete-idea/{id}', [App\Http\Controllers\IdeaController::class, 'adminDestroy'])->name('admin.ideas.destroy');
+Route::delete('/qa_manager/delete-idea/{id}', [App\Http\Controllers\IdeaController::class, 'qa_managerDestroy'])->name('qa_manager.ideas.destroy');
 
 Route::post('/ideas/{id}/like/{type}', [InteractionController::class, 'like'])->name('ideas.like');
 Route::post('/ideas/{id}/comment', [InteractionController::class, 'comment'])->name('ideas.comment');

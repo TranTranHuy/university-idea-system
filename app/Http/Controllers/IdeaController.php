@@ -68,13 +68,13 @@ class IdeaController extends Controller
         return redirect()->route('home')->with('success', 'Idea submitted successfully!');
     }
 
-    public function adminIndex()
+    public function qa_managerIndex()
     {
         $ideas = Idea::with(['user', 'category'])->latest()->paginate(15);
-        return view('admin.ideas_manage', compact('ideas'));
+        return view('qa_manager.ideas_manage', compact('ideas'));
     }
 
-    public function adminDestroy($id)
+    public function qa_managerDestroy($id)
     {
         $idea = Idea::findOrFail($id);
 

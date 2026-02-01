@@ -47,7 +47,7 @@
                             @endif
                         </td>
                         <td class="text-end pe-4">
-                            <form action="{{ route('admin.ideas.destroy', $idea->id) }}" method="POST" onsubmit="return confirm('bạn có chắc muốn xóa ý tưởng này không?');">
+                            <form action="{{ route('qa_manager.ideas.destroy', $idea->id) }}" method="POST" onsubmit="return confirm('bạn có chắc muốn xóa ý tưởng này không?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger btn-sm border-0">

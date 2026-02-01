@@ -12,7 +12,7 @@ class CategoryController extends Controller
      */
     public function index() {
     $categories = Category::all();
-    return view('admin.categories', compact('categories'));
+    return view('qa_manager.categories', compact('categories'));
 }
 
     /**
@@ -45,7 +45,7 @@ class CategoryController extends Controller
      */
    public function edit(Category $category)
 {
-    return view('admin.categories_edit', compact('category'));
+    return view('qa_manager.categories_edit', compact('category'));
 }
 
     /**
@@ -59,7 +59,7 @@ class CategoryController extends Controller
 
     $category->update($request->all());
 
-    return redirect()->route('admin.categories.index')->with('success', 'Cập nhật danh mục thành công!');
+    return redirect()->route('qa_manager.categories.index')->with('success', 'Cập nhật danh mục thành công!');
 }
 
     /**
