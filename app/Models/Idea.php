@@ -37,6 +37,7 @@ public function likes(): HasMany {
     return $this->hasMany(Like::class, 'idea_id');
 }
 
+
 // Một ý tưởng có nhiều bình luận
 public function comments(): HasMany {
     return $this->hasMany(Comment::class);
@@ -48,5 +49,11 @@ public function isLikedBy($user) {
 protected $casts = [
     'document' => 'array',
 ];
+
+public function academicYear()
+{
+    // Liên kết với bảng academic_years qua khóa ngoại academic_year_id
+    return $this->belongsTo(AcademicYear::class, 'academic_year_id');
+}
 
 }

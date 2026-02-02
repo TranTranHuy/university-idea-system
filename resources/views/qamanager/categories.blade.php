@@ -2,11 +2,9 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="d-flex justify-content-end mb-3">
-        <a href="{{ route('admin.ideas.index') }}" class="btn btn-dark shadow-sm">
-            <i class="bi bi-kanban me-2"></i> Manage All Ideas
-        </a>
-    </div>
+    <a href="{{ route('qam.ideas.export') }}" class="btn btn-success text-white">
+        <i class="bi bi-download"></i> Download Report (CSV)
+    </a>
 
     <div class="row">
         <div class="col-md-4">
@@ -46,7 +44,7 @@
                                 <td>{{ $cat->created_at->format('d/m/Y') }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('qam.categories.update', $cat->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <a href="{{ route('qam.categories.edit', $cat->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                                     <form action="{{ route('qam.categories.destroy', $cat->id) }}" method="POST">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Delete</button>

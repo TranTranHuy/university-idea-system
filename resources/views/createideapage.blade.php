@@ -7,6 +7,24 @@
             <div class="card shadow border-0 rounded-4">
                 <div class="card-body p-4">
                     <h3 class="fw-bold mb-4">Submit Your Idea</h3>
+                    {{-- --- HIỂN THỊ ACADEMIC YEAR --- --}}
+                    @if(isset($currentYear))
+                        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                            <i class="bi bi-clock-history fs-3 me-3 text-primary"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-primary">Current Semester: {{ $currentYear->name }}</h6>
+                                <small class="text-muted">
+                                    Closure Date: <span class="fw-bold text-danger">{{ \Carbon\Carbon::parse($currentYear->closure_date)->format('d/m/Y') }}</span>
+                                    (Ideas submitted after this date will be rejected)
+                                </small>
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-danger border-0 shadow-sm mb-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>System Closed:</strong> There is no active academic year at this moment. You cannot submit new ideas.
+                        </div>
+                    @endif
 
                     @if ($errors->any())
                         <div class="alert alert-danger shadow-sm border-0 rounded-3 mb-4">
@@ -26,7 +44,7 @@
 
                     <form action="{{ route('ideas.store') }}" method="POST" enctype="multipart/form-data" id="ideaForm">
                         @csrf
-
+                        <fieldset {{ !isset($currentYear) ? 'disabled' : '' }}>
                         <div class="d-flex justify-content-between align-items-center mb-4 p-3 border rounded-3 bg-light">
                             <div>
                                 <p class="mb-0 fw-bold">Posting as: <span id="displayAuthor" class="text-success">{{ auth()->user()->full_name }}</span></p>
@@ -70,12 +88,22 @@
                             <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
                         </div>
 
-                        <div class="mb-4 form-check">
-                            <input type="checkbox" name="terms" class="form-check-input" id="checkTerms" required>
-                            <label class="form-check-label small" for="checkTerms">I agree to the Terms and Conditions</label>
+                        <div class="form-check mt-3">
+                            <input type="checkbox" name="agree" id="agree" required class="form-check-input">
+                            <label class="form-check-label" for="agree">
+                                I agree to all the
+                                <a href="{{ route('terms.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+                                    Terms
+                                </a>
+                                and
+                                <a href="{{ route('privacy.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+                                    Privacy Policies
+                                </a>
+                            </label>
                         </div>
 
                         <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">SUBMIT IDEA</button>
+                        </fieldset>
                     </form>
                 </div>
             </div>
@@ -91,7 +119,7 @@
 
     function updateName() {
         if(anonymousSwitch.checked) {
-            nameLabel.innerText = "Anonymous (Người dùng ẩn danh)";
+            nameLabel.innerText = "Anonymous (Anonymous)";
             nameLabel.classList.replace('text-success', 'text-secondary');
         } else {
             nameLabel.innerText = realName;
@@ -158,6 +186,7 @@
 
         container.appendChild(realInput);
     });
+
 
     window.onload = updateName;
 </script>

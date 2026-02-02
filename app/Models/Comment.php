@@ -10,12 +10,16 @@ class Comment extends Model
     protected $fillable = [
         'user_id',
         'idea_id',
-        'content'
+        'content',
+        'is_anonymous'
     ];
+
 
     // Khai báo quan hệ với User (vì bảng của bạn tên là 'user' số ít)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
 }
+

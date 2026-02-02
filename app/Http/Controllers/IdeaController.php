@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Idea;
 use App\Models\Category;
+use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str; // Thêm dòng này để dùng hàm cắt chữ
 
@@ -38,46 +39,66 @@ class IdeaController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('createideapage', compact('categories'));
+        $currentYear = AcademicYear::where('start_date', '<=', now())
+                               ->where('final_closure_date', '>=', now())
+                               ->first();
+        return view('createideapage', compact('categories', 'currentYear'));
     }
 
     public function store(Request $request)
-{
-    // 1. Kiểm tra dữ liệu đầu vào
-    $request->validate([
-        'title' => 'required|max:255',
-        'content' => 'required',
-        'documents.*' => 'nullable|mimes:pdf,docx,jpg,png|max:2048', // Validate từng file trong mảng
-    ]);
+    {
+        // --- 1. LOGIC CHECK DEADLINE (MỚI) ---
+        // Tìm kỳ học hiện tại (đang diễn ra)
+        $currentYear = AcademicYear::where('start_date', '<=', now())
+                                ->where('final_closure_date', '>=', now()) 
+                                ->first();
 
-    $filePaths = [];
-
-    // 2. Kiểm tra nếu có file được gửi lên
-    if($request->hasFile('documents')) {
-        foreach($request->file('documents') as $file) {
-            // Lưu file vào thư mục storage/app/public/ideas
-            $path = $file->store('ideas', 'public');
-            $filePaths[] = $path; // Thêm đường dẫn vào mảng
+        // Check 1: Nếu không có kỳ học nào đang mở
+        if (!$currentYear) {
+            return redirect()->back()->with('error', 'Lỗi: Hiện tại không có kỳ học nào (hoặc đã đóng hoàn toàn).');
         }
+
+        // Check 2: Nếu đã quá hạn nộp bài (Closure Date)
+        if (now() > $currentYear->closure_date) {
+            return redirect()->back()->with('error', 'Rất tiếc, đã quá hạn nộp ý tưởng cho kỳ học này!');
+        }
+        // -------------------------------------
+
+
+        // 2. Validate dữ liệu (Code cũ của bạn)
+        $request->validate([
+            'title' => 'required|max:255',
+            'content' => 'required',
+            'documents.*' => 'nullable|mimes:pdf,docx,jpg,png|max:2048',
+        ]);
+
+        // 3. Xử lý file (Code cũ của bạn)
+        $filePaths = [];
+        if($request->hasFile('documents')) {
+            foreach($request->file('documents') as $file) {
+                $path = $file->store('ideas', 'public');
+                $filePaths[] = $path;
+            }
+        }
+
+        // 4. Lưu vào Database
+        $idea = new Idea();
+        $idea->user_id = Auth::id(); // Đã rút gọn
+        $idea->title = $request->title;
+        $idea->content = $request->input('content');
+        $idea->category_id = $request->category_id;
+        $idea->is_anonymous = $request->has('is_anonymous');
+        
+        // --- QUAN TRỌNG: Gán Idea vào kỳ học hiện tại ---
+        $idea->academic_year_id = $currentYear->id; 
+        // ------------------------------------------------
+
+        $idea->document = $filePaths; // Model tự cast mảng này thành JSON
+
+        $idea->save();
+
+        return redirect()->route('home')->with('success', 'Nộp ý tưởng thành công!');
     }
-
-    // 3. Lưu vào Database
-    $idea = new Idea();
-    $idea->user_id = \Illuminate\Support\Facades\Auth::id();
-    $idea->title = $request->title;
-    // $idea->content = $request->content; // Đảm bảo name trong form là 'content'
-    $idea->content = $request->input('content');
-    $idea->category_id = $request->category_id;
-    $idea->is_anonymous = $request->has('is_anonymous');
-
-    // Lưu mảng đường dẫn file (Laravel sẽ tự chuyển thành JSON nhờ bước 1)
-    // Lưu mảng đường dẫn vào cột document
-    $idea->document = $filePaths;
-
-    $idea->save();
-
-    return redirect()->route('home')->with('success', 'Idea submitted successfully!');
-}
 
 // Hàm hiển thị danh sách cho Admin
 public function adminIndex()
@@ -154,6 +175,50 @@ public function adminDestroy($id)
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    // --- TÍNH NĂNG MỚI: DOWNLOAD ZIP (Sprint 3) ---
+    public function downloadZip()
+    {
+        $zip = new \ZipArchive;
+        $fileName = 'all_documents_' . date('Y-m-d_H-i') . '.zip';
+        
+        // Tạo file zip tạm thời trong thư mục storage/app/public
+        $zipPath = storage_path('app/public/' . $fileName);
+
+        // Mở file Zip để ghi
+        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+            // Lấy các Idea có tài liệu đính kèm
+            // Lưu ý: Cần check cột 'document' không được null
+            $ideas = Idea::whereNotNull('document')->get();
+
+            foreach ($ideas as $idea) {
+                // Giải mã JSON vì cột document lưu dạng mảng đường dẫn: ["ideas/file1.pdf", "ideas/file2.docx"]
+                $documents = is_array($idea->document) ? $idea->document : json_decode($idea->document, true);
+
+                if (!empty($documents)) {
+                    foreach ($documents as $filePath) {
+                        // Đường dẫn thực tế trên ổ cứng server
+                        $fullPath = storage_path('app/public/' . $filePath);
+
+                        // Kiểm tra file có tồn tại không rồi mới add vào zip
+                        if (file_exists($fullPath)) {
+                            // Cấu trúc tên file trong Zip: "Idea_[ID]_[Tên gốc]" để tránh trùng tên
+                            $nameInZip = 'Idea_' . $idea->id . '_' . basename($filePath);
+                            $zip->addFile($fullPath, $nameInZip);
+                        }
+                    }
+                }
+            }
+            $zip->close();
+        }
+
+        // Trả về file Zip và tự động xóa file tạm sau khi tải xong (deleteFileAfterSend)
+        if (file_exists($zipPath)) {
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        } else {
+            return redirect()->back()->with('error', 'Không có tài liệu nào để tải hoặc lỗi tạo file Zip.');
+        }
     }
 
 }

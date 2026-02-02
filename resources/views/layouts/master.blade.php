@@ -8,6 +8,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        /* Tùy chỉnh màu sắc và kích thước cho thanh gạt */
+.form-check-input:checked {
+    background-color: #0d6efd; /* Màu xanh chuẩn Bootstrap */
+    border-color: #0d6efd;
+}
+
+.form-switch .form-check-input {
+    width: 2.5em; /* Kéo dài thanh gạt một chút */
+    cursor: pointer;
+}
+
+.form-check-label {
+    padding-left: 5px;
+    vertical-align: middle;
+}
         body { background-color: #f8f9fa; }
 
         /* Cố định Navbar ở trên cùng và ưu tiên hiển thị cao nhất */
@@ -63,7 +78,7 @@
 
                     <li class="nav-item">
                         <a class="nav-link nav-admin ms-lg-2 px-3" href="{{ route('qam.categories.index') }}">
-                            <i class="bi bi-shield-lock"></i> Admin Panel
+                            <i class="bi bi-shield-lock"></i> QAM Panel
                         </a>
                     </li>
 
@@ -96,6 +111,32 @@
     </nav>
 
     <div class="container mt-4" style="min-height: 70vh;">
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+<div class="container mt-3">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+</div>
+
+
         @yield('content')
     </div>
 

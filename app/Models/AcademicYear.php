@@ -14,9 +14,15 @@ class AcademicYear extends Model
     protected $table = 'academic_years'; // Ví dụ: tên bảng chuẩn Laravel
     
     protected $fillable = [
-        'name', 
-        'start_date', 
-        'closure_date', 
-        'final_closure_date'
+        'name',                 // Ví dụ: Spring 2026
+        'start_date',           // Ngày bắt đầu
+        'closure_date',         // Deadline 1: Đóng nộp Idea
+        'final_closure_date'    // Deadline 2: Đóng comment/like
     ];
+
+    // Quan hệ: 1 Năm học có nhiều Idea
+    public function ideas()
+    {
+        return $this->hasMany(Idea::class);
+    }
 }
