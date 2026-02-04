@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str; // Thêm dòng này để dùng hàm cắt chữ
+use App\Models\User;
 
 class IdeaController extends Controller
 {
@@ -30,11 +31,11 @@ class IdeaController extends Controller
     }
 
     // 2. Trang chi tiết Idea (Hiển thị toàn bộ nội dung)
-    public function show($id)
-    {
-        $idea = Idea::with(['user', 'category', 'comments.user'])->findOrFail($id);
-        return view('ideas_show', compact('idea'));
-    }
+    // public function show($id)
+    // {
+    //     $idea = Idea::with(['user', 'category', 'comments.user'])->findOrFail($id);
+    //     return view('ideas_show', compact('idea'));
+    // }
 
     public function create()
     {
@@ -50,7 +51,7 @@ class IdeaController extends Controller
         // --- 1. LOGIC CHECK DEADLINE (MỚI) ---
         // Tìm kỳ học hiện tại (đang diễn ra)
         $currentYear = AcademicYear::where('start_date', '<=', now())
-                                ->where('final_closure_date', '>=', now()) 
+                                ->where('final_closure_date', '>=', now())
                                 ->first();
 
         // Check 1: Nếu không có kỳ học nào đang mở
@@ -88,14 +89,35 @@ class IdeaController extends Controller
         $idea->content = $request->input('content');
         $idea->category_id = $request->category_id;
         $idea->is_anonymous = $request->has('is_anonymous');
-        
+
         // --- QUAN TRỌNG: Gán Idea vào kỳ học hiện tại ---
-        $idea->academic_year_id = $currentYear->id; 
+        $idea->academic_year_id = $currentYear->id;
         // ------------------------------------------------
 
         $idea->document = $filePaths; // Model tự cast mảng này thành JSON
 
         $idea->save();
+// --- BẮT ĐẦU LOGIC GỬI MAIL ---
+// 1. Tìm Coordinator của khoa đó
+$studentDeptId = Auth::user()->department_id;
+
+// Giả sử role Coordinator có tên là 'Coordinator' hoặc id cụ thể
+// Bạn cần check lại logic lấy user theo role trong DB của bạn
+$coordinators = User::where('department_id', $studentDeptId)
+                    ->whereHas('role', function($q) {
+                        $q->where('role_name', 'QA Coordinator'); // Check đúng tên role trong DB
+                    })->get();
+
+// 2. Gửi mail cho từng người tìm được
+foreach ($coordinators as $coord) {
+    try {
+        \Illuminate\Support\Facades\Mail::to($coord->email)
+             ->send(new \App\Mail\NewIdeaNotification($idea));
+    } catch (\Exception $e) {
+        // Có thể log lỗi nếu gửi mail thất bại, nhưng không chặn user nộp bài
+    }
+}
+// --- KẾT THÚC LOGIC GỬI MAIL ---
 
         return redirect()->route('home')->with('success', 'Nộp ý tưởng thành công!');
     }
@@ -126,6 +148,17 @@ public function adminDestroy($id)
     $idea->delete();
     return redirect()->back()->with('success', 'Xóa ý tưởng thành công!');
 }
+
+//XEM CHI TIẾT IDEA CHO COORDINATOR
+public function show($id)
+    {
+        // 1. Lấy Idea kèm theo thông tin người nộp, category và comments
+        $idea = Idea::with(['user', 'category', 'comments.user'])->findOrFail($id);
+
+        // 2. Trả về view (Chúng ta sẽ tạo file này ở Bước 2)
+        // SỬA DÒNG NÀY: Dùng dấu chấm để chỉ định thư mục (ideas/show.blade.php)
+        return view('ideas.show', compact('idea'));
+    }
 
 // --- TÍNH NĂNG MỚI: EXPORT CSV (Dành cho QA Manager) ---
     public function exportCsv()
@@ -158,16 +191,16 @@ public function adminDestroy($id)
                     $idea->id,
                     $idea->title,
                     $idea->content,
-                    // Xử lý logic Ẩn danh: Nếu anonymous thì Admin/QAM có thấy tên thật không? 
+                    // Xử lý logic Ẩn danh: Nếu anonymous thì Admin/QAM có thấy tên thật không?
                     // Thường báo cáo nội bộ thì vẫn hiện tên thật, tùy bạn quyết định.
                     $idea->is_anonymous ? $idea->user->full_name . ' (Anonymous)' : $idea->user->full_name,
-                    
+
                     // Lấy tên phòng ban (Dùng toán tử ?? để tránh lỗi nếu null)
                     $idea->user->department->department_name ?? 'No Dept',
-                    
+
                     // Lấy tên category (Check kỹ trong Model Category của bạn là 'name' hay 'category_name')
                     $idea->category->name ?? $idea->category->category_name ?? 'Uncategorized',
-                    
+
                     $idea->created_at->format('Y-m-d H:i:s')
                 ]);
             }
@@ -177,12 +210,13 @@ public function adminDestroy($id)
         return response()->stream($callback, 200, $headers);
     }
 
+
     // --- TÍNH NĂNG MỚI: DOWNLOAD ZIP (Sprint 3) ---
     public function downloadZip()
     {
         $zip = new \ZipArchive;
         $fileName = 'all_documents_' . date('Y-m-d_H-i') . '.zip';
-        
+
         // Tạo file zip tạm thời trong thư mục storage/app/public
         $zipPath = storage_path('app/public/' . $fileName);
 
@@ -220,5 +254,6 @@ public function adminDestroy($id)
             return redirect()->back()->with('error', 'Không có tài liệu nào để tải hoặc lỗi tạo file Zip.');
         }
     }
+
 
 }

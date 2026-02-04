@@ -21,7 +21,7 @@
                         {{ substr(Auth::user()->full_name ?? 'U', 0, 1) }}
                     </div>
                     <a href="{{ route('ideas.create') }}" class="btn btn-light w-100 text-start rounded-pill text-muted shadow-none py-2 px-4">
-                        Bạn có idea gì mới?
+                        Do you have any new ideas?
                     </a>
                 </div>
             </div>

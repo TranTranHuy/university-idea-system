@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\CoordinatorController;
 
 // --- 1. AUTHENTICATION ---
 Route::get('/register', function () { return view('register'); })->name('register');
@@ -26,9 +27,9 @@ Route::middleware(['auth'])->group(function () {
     // Nộp Idea
     Route::get('/create-idea', [IdeaController::class, 'create'])->name('ideas.create');
     Route::post('/create-idea', [IdeaController::class, 'store'])->name('ideas.store');
-    
+
     // --- KHU VỰC SỬA LỖI (Quan trọng) ---
-    
+
     // 1. Like (Sửa thành GET và đổi tên thành 'idea.like' để khớp với thẻ <a> bên Frontend)
     // Lưu ý: Dùng GET để like là không chuẩn bảo mật, nhưng để chạy được code cũ của nhóm thì tạm chấp nhận.
     Route::get('/idea/like/{id}/{type}', [InteractionController::class, 'like'])->name('idea.like');
@@ -53,7 +54,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', function() { return view('admin.dashboard'); })->name('dashboard');
     // Quản lý Academic Year (Dùng resource cho gọn, nó tự sinh ra index, create, store...)
     Route::resource('academic-years', AcademicYearController::class);
-    
+
     // Quản lý Deadline
     Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('academic-years.index');
     Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('academic-years.store');
@@ -63,3 +64,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/manage-ideas', [IdeaController::class, 'adminIndex'])->name('ideas.index');
     Route::delete('/delete-idea/{id}', [IdeaController::class, 'adminDestroy'])->name('ideas.destroy');
 });
+
+// COORDINATOR
+
+Route::middleware(['auth', 'role:coordinator']) // Check đúng middleware role
+    ->prefix('qa-coordinator')
+    ->as('coordinator.')
+    ->group(function () {
+
+        // Dashboard (Xem danh sách + Thống kê)
+        Route::get('/dashboard', [CoordinatorController::class, 'index'])->name('dashboard');
+
+        // Export CSV
+        Route::get('/export-csv', [CoordinatorController::class, 'exportCsv'])->name('export');
+        // Download ZIP
+        Route::get('/download-zip', [CoordinatorController::class, 'downloadZip'])->name('download.zip');
+    });
