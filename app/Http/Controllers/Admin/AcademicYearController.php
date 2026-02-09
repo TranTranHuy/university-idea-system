@@ -39,6 +39,29 @@ class AcademicYearController extends Controller
             'final_closure_date.after' => 'Ngày đóng tương tác phải là ngày cuối cùng!',
         ]);
 
+        // ============================================================
+        // 2. LOGIC KIỂM TRA TRÙNG LỊCH (MỚI THÊM VÀO)
+        // ============================================================
+        $start = $request->start_date;
+        $end = $request->final_closure_date;
+
+        // Kiểm tra xem khoảng thời gian [Start -> Final Closure] có dính dáng đến kỳ nào khác không
+        $overlap = AcademicYear::where(function ($query) use ($start, $end) {
+            $query->whereBetween('start_date', [$start, $end])
+                  ->orWhereBetween('final_closure_date', [$start, $end])
+                  ->orWhere(function ($q) use ($start, $end) {
+                      $q->where('start_date', '<=', $start)
+                        ->where('final_closure_date', '>=', $end);
+                  });
+        })->exists();
+
+        // Nếu trùng ($overlap = true) -> Báo lỗi và trả về form cũ
+        if ($overlap) {
+            return back()->withErrors(['start_date' => 'Lỗi: Khoảng thời gian này bị trùng với một kỳ học đã có! Vui lòng chọn ngày khác.'])
+                         ->withInput();
+        }
+        // ============================================================
+
         // Lưu vào Database
         AcademicYear::create($request->all());
 
@@ -58,6 +81,7 @@ class AcademicYearController extends Controller
     {
         $year = AcademicYear::findOrFail($id);
 
+        // 1. VALIDATE CƠ BẢN (Giữ nguyên)
         $request->validate([
             'name' => 'required|string|unique:academic_years,name,'.$id, // Cho phép trùng tên chính nó
             'start_date' => 'required|date',
@@ -65,6 +89,32 @@ class AcademicYearController extends Controller
             'final_closure_date' => 'required|date|after:closure_date',
         ]);
 
+        // ============================================================
+        // 2. LOGIC KIỂM TRA TRÙNG LỊCH (MỚI THÊM VÀO)
+        // ============================================================
+        $start = $request->start_date;
+        $end = $request->final_closure_date;
+
+        // Kiểm tra xem có kỳ nào khác bị trùng không
+        // QUAN TRỌNG: Phải có ->where('id', '!=', $id) để nó không tự so sánh với chính nó
+        $overlap = AcademicYear::where('id', '!=', $id) 
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                      ->orWhereBetween('final_closure_date', [$start, $end])
+                      ->orWhere(function ($q) use ($start, $end) {
+                          $q->where('start_date', '<=', $start)
+                            ->where('final_closure_date', '>=', $end);
+                      });
+            })->exists();
+
+        // Nếu trùng -> Báo lỗi và trả lại form
+        if ($overlap) {
+            return back()->withErrors(['start_date' => 'Lỗi: Thời gian cập nhật bị trùng với một kỳ học KHÁC!'])
+                         ->withInput();
+        }
+        // ============================================================
+
+        // 3. CẬP NHẬT (Giữ nguyên)
         $year->update($request->all());
 
         return redirect()->route('admin.academic-years.index')

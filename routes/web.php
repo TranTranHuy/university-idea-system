@@ -45,6 +45,8 @@ Route::middleware(['auth', 'role:qam'])->prefix('qa-manager')->name('qam.')->gro
     Route::resource('categories', CategoryController::class);
     Route::get('/export-csv', [IdeaController::class, 'exportCsv'])->name('ideas.export');
     Route::get('/download-zip', [IdeaController::class, 'downloadZip'])->name('ideas.downloadZip');
+    Route::get('/qa/download-zip/{year_id}', [IdeaController::class, 'downloadZipByYear'])
+    ->name('qa.download_zip_by_year');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 

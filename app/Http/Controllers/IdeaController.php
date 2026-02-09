@@ -70,6 +70,7 @@ class IdeaController extends Controller
         $request->validate([
             'title' => 'required|max:255',
             'content' => 'required',
+            'category_id' => 'required|exists:categories,id',
             'documents.*' => 'nullable|mimes:pdf,docx,jpg,png|max:2048',
         ]);
 
@@ -255,5 +256,76 @@ public function show($id)
         }
     }
 
+    public function downloadZipByYear($year_id)
+    {
+        $year = \App\Models\AcademicYear::findOrFail($year_id);
+        $zip = new \ZipArchive;
+        
+        // Tên file ZIP tải về
+        $fileName = 'Documents_' . \Illuminate\Support\Str::slug($year->name) . '.zip';
+        $zipPath = public_path($fileName); 
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+            
+            // Lấy Idea có tài liệu
+            $ideas = \App\Models\Idea::where('academic_year_id', $year_id)
+                        ->whereNotNull('document')
+                        ->with(['user', 'category']) 
+                        ->get();
+
+            if ($ideas->isEmpty()) {
+                $zip->close();
+                @unlink($zipPath);
+                return back()->with('error', 'Kỳ học này chưa có tài liệu nào để tải!');
+            }
+
+            foreach ($ideas as $idea) {
+                // --- 1. CHUẨN HÓA DỮ LIỆU (FIX LỖI ARRAY) ---
+                $documents = $idea->document;
+
+                // Nếu nó là chuỗi JSON (ví dụ: "['a.pdf', 'b.png']"), thì giải mã nó
+                if (is_string($documents) && str_starts_with($documents, '[')) {
+                    $documents = json_decode($documents, true);
+                }
+                // Nếu nó là chuỗi thường (1 file), ép kiểu thành mảng để dễ xử lý
+                elseif (is_string($documents)) {
+                    $documents = [$documents];
+                }
+                
+                // Nếu không phải mảng (null hoặc lỗi), bỏ qua
+                if (!is_array($documents)) {
+                    continue;
+                }
+                // ---------------------------------------------
+
+                // --- 2. DUYỆT QUA TỪNG FILE ĐỂ NÉN ---
+                foreach ($documents as $filePathRaw) {
+                    // Đường dẫn file gốc trên server
+                    // Lưu ý: filePathRaw thường là "documents/tenfile.pdf"
+                    $fullPath = storage_path('app/public/' . $filePathRaw); 
+                    
+                    if (file_exists($fullPath)) {
+                        // Tạo tên file đẹp trong ZIP: [Category]/[Email]/[TenFile]
+                        $folderName = \Illuminate\Support\Str::slug($idea->category->name ?? 'Uncategorized');
+                        $studentName = \Illuminate\Support\Str::slug($idea->user->email ?? 'Unknown');
+                        $fileNameInZip = basename($fullPath);
+                        
+                        $zipInternalPath = $folderName . '/' . $studentName . '_' . $fileNameInZip;
+                        
+                        $zip->addFile($fullPath, $zipInternalPath);
+                    }
+                }
+            }
+            
+            $zip->close();
+        }
+
+        // Nếu tạo ZIP thất bại (không có file nào tồn tại thực tế)
+        if (!file_exists($zipPath)) {
+            return back()->with('error', 'Không tìm thấy file thực tế nào để nén!');
+        }
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
 
 }

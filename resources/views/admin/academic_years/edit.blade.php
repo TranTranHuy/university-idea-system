@@ -55,7 +55,7 @@
                                 <input type="date"
                                        name="start_date"
                                        class="form-control @error('start_date') is-invalid @enderror"
-                                       value="{{ old('start_date', $academicYear->start_date) }}" required>
+                                       value="{{ old('start_date', isset($academicYear->start_date) ? \Carbon\Carbon::parse($academicYear->start_date)->format('Y-m-d') : '') }}" required>
                             </div>
                             @error('start_date')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -70,7 +70,7 @@
                                     <input type="date"
                                            name="closure_date"
                                            class="form-control @error('closure_date') is-invalid @enderror"
-                                           value="{{ old('closure_date', $academicYear->closure_date) }}" required>
+                                           value="{{ old('closure_date', isset($academicYear->closure_date) ? \Carbon\Carbon::parse($academicYear->closure_date)->format('Y-m-d') : '') }}" required>
                                 </div>
                                 <div class="form-text small">Students cannot upload ideas after this date.</div>
                                 @error('closure_date')
@@ -85,7 +85,7 @@
                                     <input type="date"
                                            name="final_closure_date"
                                            class="form-control @error('final_closure_date') is-invalid @enderror"
-                                           value="{{ old('final_closure_date', $academicYear->final_closure_date) }}" required>
+                                           value="{{ old('final_closure_date', isset($academicYear->final_closure_date) ? \Carbon\Carbon::parse($academicYear->final_closure_date)->format('Y-m-d') : '') }}" required>
                                 </div>
                                 <div class="form-text small">All interactions are disabled.</div>
                                 @error('final_closure_date')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -12,7 +13,8 @@ class CategoryController extends Controller
      */
     public function index() {
     $categories = Category::all();
-    return view('qamanager.categories', compact('categories'));
+    $academicYears = AcademicYear::latest()->get();
+    return view('qamanager.categories', compact('categories', 'academicYears'));
 }
 
     /**
@@ -65,8 +67,18 @@ class CategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-   public function destroy(Category $category) {
-    $category->delete();
-    return back()->with('success', 'Category deleted!');
-}
+   public function destroy(Category $category) 
+    {
+        // --- 1. KIỂM TRA AN TOÀN ---
+        // Đếm xem trong danh mục này có bài Idea nào không
+        // Lưu ý: Cần đảm bảo Model Category đã có hàm ideas()
+        if ($category->ideas()->exists()) {
+            return back()->with('error', 'Không thể xóa danh mục "' . $category->name . '" vì đã có sinh viên nộp bài!');
+        }
+
+        // --- 2. NẾU TRỐNG THÌ MỚI XÓA ---
+        $category->delete();
+        
+        return back()->with('success', 'Xóa danh mục thành công!');
+    }
 }
