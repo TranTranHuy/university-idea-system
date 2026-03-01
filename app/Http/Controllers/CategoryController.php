@@ -3,82 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Idea;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index() {
-    $categories = Category::all();
-    $academicYears = AcademicYear::latest()->get();
-    return view('qamanager.categories', compact('categories', 'academicYears'));
-}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index()
     {
-        //
+        $categories = Category::all();
+        $ideas = Idea::with('user')->latest()->paginate(10);
+
+        // Lấy danh sách Năm học gửi ra View để hiển thị Dropdown tải file ZIP
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
+
+        return view('qamanager.categories', compact('categories', 'ideas', 'academicYears'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {
-    $request->validate(['name' => 'required|unique:categories']);
-    Category::create($request->all());
-    return back()->with('success', 'Category created!');
-}
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
+    public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:categories,name'
+        ]);
+
+        Category::create($request->all());
+        return back()->with('success', 'Category created successfully!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-   public function edit(Category $category)
-{
-    return view('qamanager.categories_edit', compact('category'));
-}
+    public function edit(Category $category)
+    {
+        return view('qamanager.categories_edit', compact('category'));
+    }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Category $category)
-{
-    $request->validate([
-        'name' => 'required|unique:categories,name,' . $category->id
-    ]);
-
-    $category->update($request->all());
-
-    return redirect()->route('qam.categories.index')->with('success', 'Category update successful!');
-}
-
-    /**
-     * Remove the specified resource from storage.
-     */
-   public function destroy(Category $category) 
     {
-        // --- 1. KIỂM TRA AN TOÀN ---
-        // Đếm xem trong danh mục này có bài Idea nào không
-        // Lưu ý: Cần đảm bảo Model Category đã có hàm ideas()
+        $request->validate([
+            'name' => 'required|unique:categories,name,' . $category->id
+        ]);
+
+        $category->update($request->all());
+        return redirect()->route('qam.categories.index')->with('success', 'Category updated successfully!');
+    }
+
+    public function destroy(Category $category)
+    {
+        // --- RÀNG BUỘC XÓA CATEGORY ---
         if ($category->ideas()->exists()) {
-            return back()->with('error', 'Không thể xóa danh mục "' . $category->name . '" vì đã có sinh viên nộp bài!');
+            return back()->with('error', 'Không thể xóa danh mục "' . $category->name . '" vì đã có ý tưởng sử dụng danh mục này!');
         }
 
-        // --- 2. NẾU TRỐNG THÌ MỚI XÓA ---
         $category->delete();
-        
         return back()->with('success', 'Xóa danh mục thành công!');
     }
 }
