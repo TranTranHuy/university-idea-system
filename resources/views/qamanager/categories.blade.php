@@ -7,9 +7,29 @@
             <i class="bi bi-file-earmark-spreadsheet"></i> Download Report (CSV)
         </a>
 
-        <a href="{{ route('qam.download.all') }}" class="btn btn-dark shadow-sm">
-            <i class="bi bi-file-earmark-zip-fill"></i> Download All Attachments (ZIP)
-        </a>
+        {{-- --- DROPDOWN CHỌN NĂM HỌC ĐỂ TẢI ZIP --- --}}
+        <div class="dropdown">
+            <button class="btn btn-dark shadow-sm dropdown-toggle" type="button" id="dropdownZip" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-zip-fill"></i> Download ZIP by Academic Year
+            </button>
+            <ul class="dropdown-menu shadow" aria-labelledby="dropdownZip">
+                <li><h6 class="dropdown-header">Select Academic Year</h6></li>
+                @forelse($academicYears as $year)
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center" href="{{ route('qam.qa.download_zip_by_year', $year->id) }}">
+                            <span>{{ $year->name }}</span>
+                            @if(now() <= $year->final_closure_date)
+                                <span class="badge bg-success bg-opacity-10 text-success ms-3">Active</span>
+                            @else
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-3">Closed</span>
+                            @endif
+                        </a>
+                    </li>
+                @empty
+                    <li><span class="dropdown-item text-muted text-center">No academic years available</span></li>
+                @endforelse
+            </ul>
+        </div>
     </div>
 
     <div class="row">
@@ -52,7 +72,7 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <a href="{{ route('qam.categories.edit', $cat->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <form action="{{ route('qam.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                            <form action="{{ route('qam.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this category?')">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-sm btn-outline-danger">Delete</button>
                                             </form>
@@ -92,7 +112,7 @@
                                 @foreach($ideas as $idea)
                                 <tr>
                                     <td>#{{ $idea->id }}</td>
-                                    <td>{{ Str::limit($idea->title, 50) }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit($idea->title, 50) }}</td>
                                     <td>{{ $idea->is_anonymous ? 'Anonymous' : ($idea->user->full_name ?? 'Unknown') }}</td>
                                     <td>
                                         @if($idea->document)
@@ -106,7 +126,7 @@
                                     <td>
                                         @if($idea->document)
                                             <a href="{{ route('qam.download.single', $idea->id) }}" class="btn btn-sm btn-success">
-                                                <i class="bi bi-download"></i> Download ZIP
+                                                <i class="bi bi-download"></i> ZIP
                                             </a>
                                         @else
                                             <button class="btn btn-sm btn-secondary disabled">No Files</button>

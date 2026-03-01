@@ -3,31 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Idea; // Đã thêm: Để truy xuất dữ liệu Idea
+use App\Models\Idea;
+use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * Hiển thị danh sách Category và Ideas cho QA Manager
-     */
     public function index()
     {
-        // Lấy tất cả danh mục
         $categories = Category::all();
-
-        // Lấy danh sách Ideas kèm thông tin người dùng (Author) để hiển thị ở bảng phía dưới
-        // Phân trang 10 items/trang để giao diện gọn gàng
         $ideas = Idea::with('user')->latest()->paginate(10);
 
-        // Truyền cả 2 biến sang View để fix lỗi 'Undefined variable $ideas'
-        return view('qamanager.categories', compact('categories', 'ideas'));
+        // Lấy danh sách Năm học gửi ra View để hiển thị Dropdown tải file ZIP
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
+
+        return view('qamanager.categories', compact('categories', 'ideas', 'academicYears'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -35,21 +27,14 @@ class CategoryController extends Controller
         ]);
 
         Category::create($request->all());
-
         return back()->with('success', 'Category created successfully!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Category $category)
     {
         return view('qamanager.categories_edit', compact('category'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Category $category)
     {
         $request->validate([
@@ -57,22 +42,17 @@ class CategoryController extends Controller
         ]);
 
         $category->update($request->all());
-
         return redirect()->route('qam.categories.index')->with('success', 'Category updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Category $category)
     {
-        // Có thể thêm kiểm tra nếu Category đang có Idea thì không cho xóa
+        // --- RÀNG BUỘC XÓA CATEGORY ---
+        if ($category->ideas()->exists()) {
+            return back()->with('error', 'Không thể xóa danh mục "' . $category->name . '" vì đã có ý tưởng sử dụng danh mục này!');
+        }
+
         $category->delete();
-
-        return back()->with('success', 'Category deleted successfully!');
+        return back()->with('success', 'Xóa danh mục thành công!');
     }
-
-    // Các hàm không dùng đến có thể để trống hoặc xóa bớt cho gọn
-    public function create() {}
-    public function show(Category $category) {}
 }

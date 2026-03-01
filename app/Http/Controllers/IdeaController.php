@@ -214,4 +214,65 @@ class IdeaController extends Controller
 
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
+
+    // --- TẢI FILE ZIP THEO NĂM HỌC ---
+    public function downloadZipByYear($year_id)
+    {
+        $year = \App\Models\AcademicYear::findOrFail($year_id);
+        $zip = new \ZipArchive;
+
+        // Tên file ZIP tải về: VD: Documents_spring-2026.zip
+        $fileName = 'Documents_' . \Illuminate\Support\Str::slug($year->name) . '.zip';
+        $zipPath = storage_path('app/public/' . $fileName);
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+
+            // Lấy các Idea thuộc Năm học này và CÓ TÀI LIỆU
+            $ideas = \App\Models\Idea::where('academic_year_id', $year_id)
+                        ->whereNotNull('document')
+                        ->with(['user', 'category'])
+                        ->get();
+
+            if ($ideas->isEmpty()) {
+                $zip->close();
+                return back()->with('error', 'Kỳ học này chưa có ý tưởng nào chứa tài liệu đính kèm!');
+            }
+
+            $hasFiles = false;
+
+            foreach ($ideas as $idea) {
+                // Xử lý dữ liệu cột document
+                $documents = $idea->document;
+                if (is_string($documents)) {
+                    $documents = json_decode($documents, true) ?? [$documents];
+                }
+
+                if (!is_array($documents)) continue;
+
+                foreach ($documents as $filePathRaw) {
+                    $fullPath = storage_path('app/public/' . $filePathRaw);
+
+                    if (file_exists($fullPath)) {
+                        $hasFiles = true;
+                        // Phân loại thư mục trong ZIP: Tên_Danh_mục / Tên_Tác_giả_TênFile
+                        $folderName = \Illuminate\Support\Str::slug($idea->category->name ?? 'Uncategorized');
+                        $studentName = \Illuminate\Support\Str::slug($idea->user->email ?? 'Anonymous');
+                        $fileNameInZip = basename($fullPath);
+
+                        $zipInternalPath = $folderName . '/' . $studentName . '_' . $fileNameInZip;
+                        $zip->addFile($fullPath, $zipInternalPath);
+                    }
+                }
+            }
+
+            $zip->close();
+
+            if (!$hasFiles) {
+                if (file_exists($zipPath)) @unlink($zipPath);
+                return back()->with('error', 'Các file đính kèm đã bị thất lạc khỏi máy chủ!');
+            }
+        }
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
 }

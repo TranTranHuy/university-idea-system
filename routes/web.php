@@ -49,6 +49,8 @@ Route::middleware(['auth', 'role:qam'])->prefix('qa-manager')->name('qam.')->gro
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/download-all-zip', [IdeaController::class, 'downloadZip'])->name('download.all');
 Route::get('/download-idea-zip/{id}', [IdeaController::class, 'downloadSingleZip'])->name('download.single');
+// 👇 THÊM DÒNG NÀY ĐỂ FIX LỖI TẢI ZIP THEO NĂM HỌC 👇
+    Route::get('/qa/download-zip/{year_id}', [IdeaController::class, 'downloadZipByYear'])->name('qa.download_zip_by_year');
 });
 
 
