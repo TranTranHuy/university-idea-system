@@ -53,6 +53,9 @@ Route::middleware(['auth', 'role:qam'])->prefix('qa-manager')->name('qam.')->gro
 Route::get('/download-idea-zip/{id}', [IdeaController::class, 'downloadSingleZip'])->name('download.single');
 // 👇 THÊM DÒNG NÀY ĐỂ FIX LỖI TẢI ZIP THEO NĂM HỌC 👇
     Route::get('/qa/download-zip/{year_id}', [IdeaController::class, 'downloadZipByYear'])->name('qa.download_zip_by_year');
+// 👇 2 DÒNG MỚI ĐỂ QUẢN LÝ DEADLINE 👇
+    Route::get('/deadlines', [App\Http\Controllers\QAManagerController::class, 'deadlinesIndex'])->name('deadlines.index');
+    Route::put('/deadlines/{id}', [App\Http\Controllers\QAManagerController::class, 'deadlinesUpdate'])->name('deadlines.update');
 });
 
 

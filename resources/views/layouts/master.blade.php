@@ -103,13 +103,27 @@
         }
     @endphp
 
-    {{-- Hiển thị nút --}}
+{{-- Hiển thị nút --}}
     @if(in_array(Auth::user()->role_id, [1, 2, 3]))
-        <li class="nav-item">
-            <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm" href="{{ $panelRoute }}">
-                <i class="bi bi-speedometer2 me-1"></i> Management Panel
-            </a>
-        </li>
+        @if($roleName == 'QA Manager')
+            {{-- Menu Dropdown dành riêng cho QA Manager --}}
+            <li class="nav-item dropdown">
+                <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-speedometer2 me-1"></i> QA Panel
+                </a>
+                <ul class="dropdown-menu shadow border-0 mt-2">
+                    <li><a class="dropdown-item" href="{{ route('qam.categories.index') }}"><i class="bi bi-tags me-2 text-primary"></i>Manage Categories</a></li>
+                    <li><a class="dropdown-item" href="{{ route('qam.deadlines.index') }}"><i class="bi bi-calendar-event me-2 text-danger"></i>Manage Deadlines</a></li>
+                </ul>
+            </li>
+        @else
+            {{-- Nút mặc định cho Admin và Coordinator --}}
+            <li class="nav-item">
+                <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm" href="{{ $panelRoute }}">
+                    <i class="bi bi-speedometer2 me-1"></i> Management Panel
+                </a>
+            </li>
+        @endif
     @endif
 @endauth
                     {{-- --- KẾT THÚC LOGIC --- --}}
