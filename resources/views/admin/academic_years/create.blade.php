@@ -1,26 +1,20 @@
-{{-- Lưu ý: Nếu file layout của bạn tên là 'master.blade.php' nằm ngay trong views thì để là 'master' --}}
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('content')
+@section('admin_content')
 <div class="container py-5">
-
-    <div class="mb-4">
-        <a href="{{ route('admin.academic-years.index') }}" class="btn btn-outline-secondary shadow-sm">
-            <i class="bi bi-arrow-left"></i> Back to List
-        </a>
-    </div>
-
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-header bg-primary text-white py-3 px-4">
-                    <h4 class="mb-0 fw-bold"><i class="bi bi-calendar-plus me-2"></i> Create New Academic Year</h4>
+
+                {{-- Đổi màu nền Header thành #2f80ed --}}
+                <div class="card-header text-white py-3 px-4" style="background-color: #808080;">
+                    <h4 class="mb-0 fw-bold"><i></i> Create New Academic Year</h4>
                 </div>
 
                 <div class="card-body p-5">
 
-                    {{-- Hiển thị thông báo lỗi chung (Nếu có) --}}
-                    @if ($errors->any())
+                    {{-- Hiển thị thông báo lỗi chung --}}
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger border-0 shadow-sm mb-4">
                             <ul class="mb-0 ps-3">
                                 @foreach ($errors->all() as $error)
@@ -28,7 +22,13 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
+                    {{-- Hiển thị lỗi Trùng ngày (Overlap) từ Controller trả về --}}
+@if(session('error'))
+    <div class="alert alert-danger border-0 shadow-sm mb-4">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+    </div>
+@endif
 
                     <form action="{{ route('admin.academic-years.store') }}" method="POST">
                         @csrf
@@ -38,7 +38,7 @@
                             <input type="text"
                                    name="name"
                                    class="form-control form-control-lg @error('name') is-invalid @enderror"
-                                   placeholder="e.g. Spring 2024"
+                                   placeholder="e.g. Spring 2026"
                                    value="{{ old('name') }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -70,7 +70,7 @@
                                            class="form-control @error('closure_date') is-invalid @enderror"
                                            value="{{ old('closure_date') }}" required>
                                 </div>
-                                <div class="form-text small">Students cannot upload ideas after this date.</div>
+                                <div class="form-text small">Staff cannot upload ideas after this date.</div>
                                 @error('closure_date')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -92,9 +92,13 @@
                             </div>
                         </div>
 
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm fw-bold">
-                                <i class="bi bi-save me-2"></i> Save Academic Year
+                        {{-- Căn chỉnh 2 nút nằm ngang, chia đều tỷ lệ 50-50 --}}
+                        <div class="d-flex justify-content-between gap-3 mt-4">
+                            <a href="{{ route('admin.academic-years.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm fw-bold w-50">
+                                <i ></i> Back to List
+                            </a>
+                            <button type="submit" class="btn text-white btn-lg shadow-sm fw-bold w-50" style="background-color: #808080; border: none;">
+                                <i></i> Save Academic Year
                             </button>
                         </div>
 

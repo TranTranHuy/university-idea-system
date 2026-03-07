@@ -1,7 +1,8 @@
 
-@extends('layouts.master')
+@extends('layouts.admin')
+@section('admin_content')
 
-@section('content')
+{{-- @section('content') --}}
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>

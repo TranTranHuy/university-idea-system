@@ -11,11 +11,13 @@ class AcademicYearController extends Controller
     public function index()
     {
         $years = AcademicYear::latest()->paginate(10);
+        // Đã sửa 'academic years' thành 'academic_years'
         return view('admin.academic_years.index', compact('years'));
     }
 
     public function create()
     {
+        // Đã sửa 'academic years' thành 'academic_years'
         return view('admin.academic_years.create');
     }
 
@@ -27,8 +29,8 @@ class AcademicYearController extends Controller
             'closure_date' => 'required|date|after:start_date',
             'final_closure_date' => 'required|date|after:closure_date',
         ], [
-            'closure_date.after' => 'Ngày đóng nộp Idea phải diễn ra sau ngày bắt đầu!',
-            'final_closure_date.after' => 'Ngày đóng tương tác phải là ngày cuối cùng!',
+            'closure_date.after' => 'The idea submission deadline must be after the start date.!',
+            'final_closure_date.after' => 'The final closure date must be after the idea submission deadline.!',
         ]);
 
         // --- RÀNG BUỘC TRÙNG NGÀY (OVERLAP) ---
@@ -38,18 +40,20 @@ class AcademicYearController extends Controller
                                ->exists();
 
         if ($overlap) {
-            return back()->withInput()->with('error', 'Lỗi: Khoảng thời gian này bị trùng lặp với một Năm học khác đã tồn tại!');
+            return back()->withInput()->with('error', 'Error: This time period overlaps with an existing Academic Year!');
         }
 
         AcademicYear::create($request->all());
 
+        // Đã sửa 'academic years' thành 'academic_years'
         return redirect()->route('admin.academic-years.index')
-                         ->with('success', 'Tạo kỳ học mới thành công!');
+                         ->with('success', 'New Academic Year created successfully!');
     }
 
     public function edit($id)
     {
         $academicYear = AcademicYear::findOrFail($id);
+        // Đã sửa 'academic years' thành 'academic_years'
         return view('admin.academic_years.edit', compact('academicYear'));
     }
 
@@ -72,13 +76,13 @@ class AcademicYearController extends Controller
                                ->exists();
 
         if ($overlap) {
-            return back()->withInput()->with('error', 'Lỗi: Thời gian cập nhật bị đè lên một Năm học khác!');
+            return back()->withInput()->with('error', 'Error: The updated time period overlaps with an existing Academic Year!');
         }
 
         $year->update($request->all());
 
         return redirect()->route('admin.academic-years.index')
-                         ->with('success', 'Cập nhật thành công!');
+                         ->with('success', 'Update successful!');
     }
 
     public function destroy($id)
@@ -88,10 +92,10 @@ class AcademicYearController extends Controller
         // --- RÀNG BUỘC XÓA ---
         // Nếu năm học này đã có Idea nộp vào thì chặn không cho xóa
         if ($year->ideas()->exists()) {
-            return back()->with('error', 'Không thể xóa kỳ học "' . $year->name . '" vì đã có sinh viên nộp bài trong thời gian này!');
+            return back()->with('error', 'Error: Cannot delete this Academic Year as there are ideas submitted within this period!');
         }
 
         $year->delete();
-        return back()->with('success', 'Đã xóa kỳ học thành công!');
+        return back()->with('success', 'New Academic Year deleted successfully!');
     }
 }

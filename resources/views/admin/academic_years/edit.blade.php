@@ -1,29 +1,23 @@
-{{-- Lưu ý: Kiểm tra lại tên file layout của bạn (master hay layouts.master) --}}
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('content')
-<div class="container py-5">
-
-    <div class="mb-4">
-        <a href="{{ route('admin.academic-years.index') }}" class="btn btn-outline-secondary shadow-sm">
-            <i class="bi bi-arrow-left"></i> Back to List
-        </a>
-    </div>
+@section('admin_content')
+<div class="container py-5  ">
 
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-                <div class="card-header bg-warning text-dark py-3 px-4">
+                {{-- Đổi màu nền Header thành #2f80ed --}}
+                <div class="card-header text-white py-3 px-4" style="background-color: #808080;">
                     <h4 class="mb-0 fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i> Edit Academic Year
+                        <i ></i> Edit Academic Year
                     </h4>
                 </div>
 
                 <div class="card-body p-5">
 
                     {{-- Hiển thị lỗi Validate --}}
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger border-0 shadow-sm mb-4">
                             <ul class="mb-0 ps-3">
                                 @foreach ($errors->all() as $error)
@@ -31,7 +25,13 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
+                    {{-- Hiển thị lỗi Trùng ngày (Overlap) từ Controller trả về --}}
+@if(session('error'))
+    <div class="alert alert-danger border-0 shadow-sm mb-4">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+    </div>
+@endif
 
                     <form action="{{ route('admin.academic-years.update', $academicYear->id) }}" method="POST">
                         @csrf
@@ -94,12 +94,13 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{{ route('admin.academic-years.index') }}" class="btn btn-light shadow-sm fw-bold">
+                        {{-- Căn chỉnh 2 nút nằm ngang, chia đều tỷ lệ 50-50 --}}
+                        <div class="d-flex justify-content-between gap-3 mt-4">
+                            <a href="{{ route('admin.academic-years.index') }}" class="btn btn-outline-secondary btn-lg shadow-sm fw-bold w-50">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-warning shadow-sm fw-bold text-dark px-4">
-                                <i class="bi bi-check-circle-fill me-2"></i> Update Changes
+                            <button type="submit" class="btn text-white btn-lg shadow-sm fw-bold w-50" style="background-color: #808080; border: none;">
+                                <i></i> Update Changes
                             </button>
                         </div>
 
