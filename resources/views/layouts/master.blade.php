@@ -135,11 +135,10 @@
         }
 
         .footer {
-            background-color: #343a40;
-            color: white;
-            padding: 20px 0;
-            margin-top: auto; /* Đẩy footer xuống đáy */
-        }
+    flex-shrink: 0;
+    padding: 20px 0;
+    margin-top: auto; /* Thuộc tính này kết hợp với flexbox của body sẽ ép footer xuống đáy */
+}
     </style>
 </head>
 <body>
@@ -153,11 +152,19 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center">
-                    <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">All Ideas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('ideas.create') }}">Submit Idea</a></li>
-                </ul>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    <li class="nav-item">
+        <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {{ request()->is('ideas*') || request()->is('all-ideas') ? 'active' : '' }}" href="/ideas">All Ideas</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {{ request()->is('create-idea') || request()->routeIs('ideas.create') ? 'active' : '' }}" href="{{ route('ideas.create') }}">Submit Idea</a>
+    </li>
+</ul>
 
                 <ul class="navbar-nav ms-auto align-items-center pe-2">
                     {{-- --- BẮT ĐẦU LOGIC MANAGEMENT PANEL --- --}}
@@ -191,9 +198,9 @@
                         @if(in_array(Auth::user()->role_id, [1, 2, 3]))
                             @if($roleName == 'QA Manager')
                                 {{-- Menu Dropdown dành riêng cho QA Manager --}}
-                                <li class="nav-item dropdown me-lg-3">
-                                    <a class="nav-link nav-admin shadow-sm dropdown-toggle" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
-                                        <i class="bi bi-speedometer2 me-1"></i> QA Panel
+                                <li class="nav-item dropdown ms-lg-3 d-flex align-items-center">
+                                    <a class="btn user-dropdown-btn px-3 py-2 dropdown-toggle d-flex align-items-center" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-speedometer2 me-2 text-primary"></i> QA Panel
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                                         <li><a class="dropdown-item" href="{{ route('qam.categories.index') }}"><i class="bi bi-tags me-2 text-primary"></i>Manage Categories</a></li>
@@ -202,9 +209,9 @@
                                 </li>
                             @else
                                 {{-- Nút mặc định cho Admin và Coordinator --}}
-                                <li class="nav-item me-lg-3">
-                                    <a class="nav-link nav-admin shadow-sm" href="{{ $panelRoute }}">
-                                        <i class="bi bi-speedometer2 me-1"></i> Management Panel
+                                <li class="nav-item ms-lg-3 d-flex align-items-center">
+                                    <a class="btn user-dropdown-btn px-3 py-2 d-flex align-items-center" href="{{ $panelRoute }}">
+                                        <i class="bi bi-speedometer2 me-2 text-primary"></i> Management Panel
                                     </a>
                                 </li>
                             @endif
@@ -249,12 +256,12 @@
         @yield('content')
     </div>
 
-    <div class="footer text-center mt-10">
-        <div class="container">
-            <p class="mb-0">&copy; 2026 University Idea System. All rights reserved.</p>
-            <small class="text-muted" style="color: #adb5bd !important;">Designed for Greenwich Vietnam</small>
-        </div>
+    <div class="footer text-center">
+    <div class="container">
+        <p class="mb-0 text-dark fw-medium">&copy; 2026 University Idea System. All rights reserved.</p>
+        <small class="text-muted">Designed for Greenwich Vietnam</small>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 

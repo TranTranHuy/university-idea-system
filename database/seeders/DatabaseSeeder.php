@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
             'department_id' => $itDept->id, // Thuộc khoa IT
             'email_verified_at' => now(),
         ]);
-        
+
         // --- E. Tài khoản STAFF (Nhân viên Khoa Business - Để test QAC IT không nhìn thấy ông này) ---
         User::create([
             'full_name' => 'Tran Thi Business',

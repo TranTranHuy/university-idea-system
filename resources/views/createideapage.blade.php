@@ -55,7 +55,7 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <label class="form-label fw-bold">Idea Title</label>
                             <input type="text" name="title" class="form-control form-control-lg" placeholder="Enter title" value="{{ old('title') }}" required>
                         </div>
@@ -63,7 +63,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">Category</label>
                             <select name="category_id" class="form-select" required>
-                                <option value="">-- Choose Category --</option>
+                                <option value="">Choose Category</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}
@@ -75,7 +75,28 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">Description</label>
                             <textarea name="content" class="form-control" rows="6" placeholder="Describe your idea in detail..." required>{{ old('content') }}</textarea>
-                        </div>
+                        </div> --}}
+                        <div class="mb-3">
+    <label class="form-label fw-bold">Idea Title</label>
+    <input type="text" name="title" class="form-control" placeholder="Enter title" value="{{ old('title') }}" required>
+</div>
+
+<div class="mb-3">
+    <label class="form-label fw-bold">Category</label>
+    <select name="category_id" class="form-select" required>
+        <option value="" disabled selected>Choose Category</option>
+        @foreach($categories as $category)
+            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                {{ $category->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label fw-bold">Description</label>
+    <textarea name="content" class="form-control" rows="6" placeholder="Describe your idea in detail..." required>{{ old('content') }}</textarea>
+</div>
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">Attachments (Select multiple times if needed)</label>
@@ -85,7 +106,7 @@
 
                             <div id="fileList" class="mt-3 d-flex flex-wrap gap-2">
                                 </div>
-                            <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
+                            {{-- <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
                         </div>
 
                         <div class="form-check mt-3">
@@ -102,7 +123,23 @@
                             </label>
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">SUBMIT IDEA</button>
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">SUBMIT IDEA</button> --}}
+                        <small class="text-muted d-block mt-2">Accepted: pdf, docx, jpg, png (max 2MB per file)</small>
+</div> <div class="form-check mt-3 mb-4">
+    <input type="checkbox" name="agree" id="agree" required class="form-check-input" style="cursor: pointer;">
+    <label class="form-check-label" for="agree" style="cursor: pointer;">
+        I agree to the
+        <a href="{{ route('terms.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Terms of Service
+        </a>
+        and
+        <a href="{{ route('privacy.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
+            Privacy Policy
+        </a>
+    </label>
+</div>
+
+<button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm" style="background-color: #5cb85c; border: none;">SUBMIT IDEA</button>
                         </fieldset>
                     </form>
                 </div>

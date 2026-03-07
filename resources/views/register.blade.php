@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký tài khoản</title>
+    <title>Register an account</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <div class="image-section">
-            <img src="{{ asset('images/signup_image_3d.png') }}" alt="Sign Up Illustration">
+            <img src="https://st.depositphotos.com/18722762/51522/v/450/depositphotos_515228796-stock-illustration-online-registration-sign-login-account.jpg">
         </div>
 
         <div class="form-section">
@@ -35,49 +35,62 @@
                 <div class="input-group">
                     <label>Email</label>
                     <input type="email" name="email" id="email" placeholder="john.doe@gmail.com" value="{{ old('email') }}" required>
-                    <div class="error-msg" id="emailError" style="display:none; color:red">Email không hợp lệ.</div>
+                    <div class="error-msg" id="emailError" style="display:none; color:red">Invalid email.</div>
                 </div>
 
                 <div class="input-group">
                     <label>Password</label>
                     <input type="password" name="password" id="password" placeholder="••••••••" required>
                     <span class="toggle-password" onclick="togglePwd('password')">👁️</span>
-                    <div class="error-msg" id="passError" style="display:none; color:red">Mật khẩu phải 8 ký tự, chữ cái đầu viết hoa và có số.</div>
+                    <div class="error-msg" id="passError" style="display:none; color:red">The password must be 8 characters long, with the first letter capitalized, and include numbers.</div>
                 </div>
 
-                <div class="input-group" style="margin-top: 15px;">
-                    <label>Vai trò & Phòng ban</label>
+                {{-- <div class="input-group" style="margin-top: 15px;">
+                    <label>Roles and Departments</label>
                     <div style="display: flex; gap: 10px;">
                         <select name="role_id" class="input-style" style="width: 50%; padding: 10px;">
-                            <option value="2">Nhân viên</option>
+                            <option value="2">Employee</option>
                             <option value="1">Admin</option>
                         </select>
                         <select name="department_id" class="input-style" style="width: 50%; padding: 10px;">
-                            <option value="1">Phòng IT</option>
-                            <option value="2">Phòng HR</option>
+                            <option value="1">IT Department</option>
+                            <option value="2">HR Department</option>
                         </select>
                     </div>
-                </div>
+                </div> --}}
+                <div class="input-group" style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+    <label style="margin-bottom: 0; white-space: nowrap;">Department</label>
 
-                <div class="form-check mt-3">
-    <input type="checkbox" name="agree" id="agree" required class="form-check-input">
-    <label class="form-check-label" for="agree">
-        I agree to all the
-        <a href="{{ route('terms.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
-            Terms
-        </a>
-        and
-        <a href="{{ route('privacy.index') }}" target="_blank" class="text-primary fw-bold text-decoration-none">
-            Privacy Policies
-        </a>
+    <select name="department_id" class="input-style" style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db;">
+        <option value="1">IT Department</option>
+        <option value="2">HR Department</option>
+    </select>
+
+    <input type="hidden" name="role_id" value="2">
+</div>
+
+                <div style="margin-top:15px; font-size:14px; color:#666;">
+    <input type="checkbox" name="agree" id="agree" required style="margin-right:6px;">
+    <label for="agree">
+        I agree to the
+<a href="{{ route('terms.index') }}" style="color:#2f80ed; font-weight:600; text-decoration:none;">
+    Terms of Service
+</a>
+and
+<a href="{{ route('privacy.index') }}" style="color:#2f80ed; font-weight:600; text-decoration:none;">
+    Privacy Policy
+</a>
     </label>
 </div>
 
-                <button type="submit" class="btn-submit">Create account</button>
+                <button type="submit" class="btn-submit" style="margin-top:15px;">Create account</button>
 
                 <div class="footer-text">
-                    Already have an account? <a href="{{ route('login') }}">Login</a>
-                </div>
+    Already have an account?
+    <a href="{{ route('login') }}" style="color:#2f80ed; font-weight:600; text-decoration:none;">
+        Login
+    </a>
+</div>
             </form>
         </div>
     </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CoordinatorController;
+use App\Http\Controllers\PasswordResetController;
 
 
 // --- 1. AUTHENTICATION ---
@@ -88,3 +89,14 @@ Route::middleware(['auth', 'role:coordinator']) // Check đúng middleware role
         // Download ZIP
         Route::get('/download-zip', [CoordinatorController::class, 'downloadZip'])->name('download.zip');
     });
+
+    //RESET PASSWORD
+    // 1. Form nhập email
+Route::get('forgot-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
+// 2. Xử lý check email (không gửi mail, chuyển thẳng sang form đặt pass mới)
+Route::post('forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// 3. Form nhập mật khẩu mới
+Route::get('reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+// 4. Xử lý lưu mật khẩu mới vào database
+Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
