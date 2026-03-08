@@ -95,6 +95,7 @@
             </nav>
 
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <h1 style="color: red;">ĐÃ CHẠY VÀO FILE LAYOUT!</h1>
                 @yield('admin_content')
             </main>
         </div>

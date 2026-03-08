@@ -1,7 +1,6 @@
 
 @extends('layouts.admin')
 @section('admin_content')
-
 {{-- @section('content') --}}
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -10,7 +9,7 @@
             <p class="text-muted mb-0">Manage university semesters and deadlines.</p>
         </div>
         <a href="{{ route('admin.academic-years.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
-            <i class="bi bi-plus-lg me-2"></i> Create New Year
+            <i class="bi bi-plus-lg mse-2"></i> Create New Year
         </a>
     </div>
 

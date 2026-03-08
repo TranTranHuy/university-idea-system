@@ -111,10 +111,10 @@
 {{-- SCRIPT VẼ BIỂU ĐỒ (CHART.JS) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ==========================================
-        // KHU VỰC DÀNH CHO BACKEND (PHP SẼ ĐỔ DATA VÀO ĐÂY)
-        {{-- Ví dụ: const depts = {!! json_encode($deptNamesArray) !!}; --}}
-        // ==========================================
+        // // ==========================================
+        // // KHU VỰC DÀNH CHO BACKEND (PHP SẼ ĐỔ DATA VÀO ĐÂY)
+        // {{-- Ví dụ: const depts = {!! json_encode($deptNamesArray) !!}; --}}
+        // // ==========================================
         const depts = ['Dept A', 'Dept B', 'Dept C', 'Dept D']; // Mảng tên Khoa/Phòng ban
         const ideasData = [10, 20, 30, 40]; // Mảng số lượng Idea tương ứng
 
