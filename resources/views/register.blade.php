@@ -61,10 +61,13 @@
                 <div class="input-group" style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
     <label style="margin-bottom: 0; white-space: nowrap;">Department</label>
 
-    <select name="department_id" class="input-style" style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db;">
-        <option value="1">IT Department</option>
-        <option value="2">HR Department</option>
-    </select>
+    <select id="department_id" name="department_id" class="form-select" required>
+    <option value="" disabled selected>Select your department</option>
+    @foreach ($departments as $department)
+        {{-- Nhớ gọi department_name --}}
+        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+    @endforeach
+</select>
 
     <input type="hidden" name="role_id" value="2">
 </div>

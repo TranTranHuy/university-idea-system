@@ -10,13 +10,24 @@
             <p class="text-muted mb-0">Manage university departments, facilities, and staff allocations.</p>
         </div>
 
-        {{-- NÚT NÀY ĐÃ ĐƯỢC ĐỔI ĐỂ MỞ POPUP --}}
+        {{-- NÚT MỞ POPUP --}}
         <button type="button" class="btn text-white shadow-sm rounded-pill px-4" style="background-color: #2f80ed;" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
             <i class="bi bi-plus-lg me-2"></i> Add Department
         </button>
     </div>
 
-    {{-- Hiển thị thông báo thành công (nếu có) --}}
+    {{-- Hiển thị thông báo LỖI (Ví dụ: Nhập trùng tên) --}}
+    @if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Hiển thị thông báo THÀNH CÔNG --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
@@ -31,39 +42,35 @@
                 <thead class="bg-light text-secondary text-uppercase small fw-bold">
                     <tr>
                         <th class="ps-4 py-3" style="width: 10%;">ID</th>
-                        <th class="py-3" style="width: 30%;">Department Name</th>
-                        {{-- <th class="py-3" style="width: 30%;">Description</th> --}}
+                        <th class="py-3" style="width: 60%;">Department Name</th>
                         <th class="py-3 text-center" style="width: 15%;">Staff Count</th>
                         <th class="py-3 text-end pe-4" style="width: 15%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
 
-                    {{-- BACKEND: Dùng vòng lặp @forelse ($departments as $department) ở đây --}}
+                    {{-- VÒNG LẶP ĐỔ DỮ LIỆU TỪ DATABASE --}}
+                    @forelse ($departments as $department)
                     <tr>
-                        <td class="ps-4 fw-bold text-muted">#[Dept_ID]</td>
+                        <td class="ps-4 fw-bold text-muted">#{{ $department->id }}</td>
                         <td>
-                            <span class="fw-bold text-dark fs-6">[Department Name]</span>
+                            <span class="fw-bold text-dark fs-6">{{ $department->department_name }}</span>
                         </td>
-                        {{-- <td>
-                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 250px;">
-                                [Short Description of the Department]
-                            </span>
-                        </td> --}}
                         <td class="text-center">
+                            {{-- Đếm số lượng Staff tự động --}}
                             <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3 py-1">
-                                <i class="bi bi-people-fill me-1"></i> [0] Users
+                                <i class="bi bi-people-fill me-1"></i> {{ $department->users_count }} Staff
                             </span>
                         </td>
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">
-                                {{-- Nút Edit --}}
+                                {{-- Nút Edit (Sẽ làm sau) --}}
                                 <a href="#" class="btn btn-sm btn-outline-primary" title="Edit Department">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
                                 {{-- Nút Delete --}}
-                                <form action="#" method="POST" class="d-inline">
+                                <form action="{{ route('admin.departments.destroy', $department->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
@@ -75,7 +82,14 @@
                             </div>
                         </td>
                     </tr>
-                    {{-- BACKEND: Kết thúc vòng lặp @endforelse --}}
+                    @empty
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-building-slash fs-1 d-block mb-2"></i>
+                            No departments found. Please add a new one.
+                        </td>
+                    </tr>
+                    @endforelse
 
                 </tbody>
             </table>
@@ -93,22 +107,21 @@
             {{-- Tiêu đề Popup & Nút X (Đóng) --}}
             <div class="modal-header border-bottom-0 pt-4 pb-0 px-4">
                 <h5 class="modal-title fw-bold text-dark" id="addDepartmentModalLabel">
-                    <i ></i> Add New Department
+                    <i class="bi bi-building-add text-primary me-2"></i> Add New Department
                 </h5>
-                {{-- Đây là nút X dùng để tắt Popup --}}
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             {{-- Nội dung Popup (Form) --}}
             <div class="modal-body p-4">
-                {{-- BACKEND: Gắn route('admin.departments.store') vào action --}}
-                <form action="#" method="POST">
-                    {{-- BACKEND: Bỏ comment @csrf khi code logic --}}
-                    {{-- @csrf --}}
+                {{-- Đã gắn route lưu dữ liệu --}}
+                <form action="{{ route('admin.departments.store') }}" method="POST">
+                    @csrf
 
                     <div class="mb-4">
                         <label for="departmentName" class="form-label fw-bold text-secondary">Department Name</label>
-                        <input type="text" class="form-control form-control-lg bg-light" id="departmentName" name="name" placeholder="e.g. IT Department" required>
+                        {{-- Quan trọng: name="department_name" --}}
+                        <input type="text" class="form-control form-control-lg bg-light" id="departmentName" name="department_name" placeholder="e.g. IT Department" required>
                     </div>
 
                     <div class="d-grid mt-2">

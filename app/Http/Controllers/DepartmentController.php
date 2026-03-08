@@ -1,14 +1,33 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
+use App\Models\Department;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
     public function index()
-{
-    // Trỏ tới file index.blade.php nằm trong thư mục resources/views/admin/departments/
-    return view('admin.departments.index');
-}
+    {
+        // Hàm withCount('users') sẽ tự động đếm số lượng tài khoản trong bảng 'user'
+        // dựa vào mối quan hệ ní đã tạo, và sinh ra biến $department->users_count
+        $departments = Department::withCount('users')->latest()->get();
+        return view('admin.departments.index', compact('departments'));
+    }
+
+    public function store(Request $request)
+    {
+        // Kiểm tra dữ liệu: bắt buộc nhập và không được trùng tên
+        $request->validate([
+            'department_name' => 'required|string|max:255|unique:departments,department_name'
+        ]);
+
+        // Lưu vào Database
+        Department::create([
+            'department_name' => $request->department_name
+        ]);
+
+        return back()->with('success', 'New Department added successfully!');
+    }
 }
