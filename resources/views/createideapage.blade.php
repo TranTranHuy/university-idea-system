@@ -60,6 +60,34 @@
                             <input type="text" name="title" class="form-control form-control-lg" placeholder="Enter title" value="{{ old('title') }}" required>
                         </div>
 
+
+
+                {{-- BẮT ĐẦU: NÚT CHỌN KHOA DÀNH RIÊNG CHO ADMIN / QA MANAGER --}}
+                        @php
+                            $userRole = Auth::user()->role->role_name ?? Auth::user()->role;
+                            $isAdminOrQAM = in_array($userRole, ['Administrator', 'Admin', 'admin', 'QA Manager']);
+                        @endphp
+
+                        @if($isAdminOrQAM)
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary"><i class="bi bi-building"></i> Target Department <span class="text-danger">*</span></label>
+                            <select name="department_id" class="form-select border-primary" required>
+                                <option value="">-- Select Target Department --</option>
+                                @if(isset($departments))
+                                    @foreach($departments as $dept)
+                                        <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>
+                                            {{ $dept->department_name ?? $dept->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <small class="text-muted">As a Manager, choose which department this idea belongs to.</small>
+                        </div>
+                        @endif
+                        {{-- KẾT THÚC: NÚT CHỌN KHOA --}}
+
+                        
+
                         <div class="mb-3">
                             <label class="form-label fw-bold">Category</label>
                             <select name="category_id" class="form-select" required>

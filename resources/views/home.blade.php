@@ -18,7 +18,11 @@
             <div class="card mb-5 border-0 shadow-sm p-3 rounded-4">
                 <div class="d-flex align-items-center">
                     <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; flex-shrink: 0;">
-                        {{ substr(Auth::user()->full_name ?? 'U', 0, 1) }}
+                        @auth
+                            {{ substr(Auth::user()->full_name ?? Auth::user()->name ?? 'U', 0, 1) }}
+                        @else
+                            <i class="bi bi-person"></i>
+                        @endauth
                     </div>
                     <a href="{{ route('ideas.create') }}" class="btn btn-light w-100 text-start rounded-pill text-muted shadow-none py-2 px-4">
                         Do you have any new ideas?
@@ -36,9 +40,24 @@
                                 <div class="d-flex justify-content-between mb-2">
                                     <div class="d-flex align-items-center overflow-hidden">
                                         <img src="https://ui-avatars.com/api/?name={{ $idea->is_anonymous ? 'A' : ($idea->user->full_name ?? 'U') }}&background=random" class="rounded-circle me-2" width="35" height="35">
+
                                         <div class="text-truncate">
-                                            <strong class="d-block small text-truncate">{{ $idea->is_anonymous ? 'Anonymous' : ($idea->user->full_name ?? 'Không tên') }}</strong>
-                                            <small class="text-muted" style="font-size: 0.7rem;">{{ $idea->created_at->diffForHumans() }}</small>
+                                            {{-- LOGIC ADMIN NHÌN THẤU BÀI VIẾT ẨN DANH --}}
+                                            @if($idea->is_anonymous)
+                                                <strong class="d-block small text-truncate text-muted fst-italic"><i class="bi bi-incognito"></i> Anonymous</strong>
+                                                @auth
+                                                    @if(Auth::user()->role_id == 1)
+                                                        <div class="text-danger mt-1" style="font-size: 0.7rem; line-height: 1;">
+                                                            <i class="bi bi-eye-fill"></i> Real: <strong class="text-truncate">{{ $idea->user->full_name ?? $idea->user->name ?? 'Unknown' }}</strong>
+                                                        </div>
+                                                    @endif
+                                                @endauth
+                                            @else
+                                                <strong class="d-block small text-truncate">{{ $idea->user->full_name ?? $idea->user->name ?? 'Không tên' }}</strong>
+                                            @endif
+                                            {{-- END LOGIC ADMIN --}}
+
+                                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">{{ $idea->created_at->diffForHumans() }}</small>
                                         </div>
                                     </div>
                                     <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 align-self-start" style="font-size: 0.65rem;">{{ $idea->category->name ?? 'Chung' }}</span>
@@ -59,6 +78,26 @@
                                         </button>
                                     @endif
                                 </div>
+
+                                {{-- 👇 CHÈN THÊM KHỐI HIỂN THỊ FILE ĐÍNH KÈM Ở ĐÂY 👇 --}}
+                                @php
+                                    $documents = is_string($idea->document) ? json_decode($idea->document, true) : $idea->document;
+                                @endphp
+                                @if(!empty($documents) && is_array($documents))
+                                    <div class="mt-2 pt-2 mb-2 border-top border-light">
+                                        <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.7rem;">
+                                            <i class="bi bi-paperclip"></i> Attachments:
+                                        </small>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach($documents as $file)
+                                                <a href="{{ asset('storage/' . $file) }}" download class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none border border-secondary p-1 px-2" style="font-size: 0.7rem; transition: 0.2s;" onmouseover="this.classList.replace('bg-opacity-10', 'bg-opacity-25')" onmouseout="this.classList.replace('bg-opacity-25', 'bg-opacity-10')">
+                                                    <i class="bi bi-file-earmark-arrow-down-fill"></i> {{ basename($file) }}
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                {{-- 👆 KẾT THÚC KHỐI HIỂN THỊ FILE 👆 --}}
 
                                 {{-- Interaction Buttons --}}
                                 <div class="d-flex align-items-center gap-3 border-top pt-2 mb-2">
@@ -112,12 +151,28 @@
                                 {{-- Comments Section --}}
                                 <div class="collapse" id="comments-{{ $idea->id }}">
                                     <div class="mt-2 p-2 bg-light rounded" style="max-height: 150px; overflow-y: auto;">
-                                        @foreach($idea->comments as $comment)
+                                        @forelse($idea->comments as $comment)
                                             <div class="small mb-2 border-bottom pb-1">
-                                                <strong style="font-size: 0.7rem;">{{ $comment->is_anonymous ? 'Anonymous' : ($comment->user->full_name ?? 'User') }}:</strong>
-                                                <span style="font-size: 0.75rem;">{{ $comment->content }}</span>
+                                                {{-- LOGIC ADMIN NHÌN THẤU BÌNH LUẬN ẨN DANH --}}
+                                                @if($comment->is_anonymous)
+                                                    <strong class="text-muted fst-italic" style="font-size: 0.7rem;"><i class="bi bi-incognito"></i> Anonymous:</strong>
+                                                    @auth
+                                                        @if(Auth::user()->role_id == 1)
+                                                            <span class="text-danger ms-1" style="font-size: 0.65rem;" title="Admin View">
+                                                                (<i class="bi bi-eye-fill"></i> {{ $comment->user->full_name ?? $comment->user->name ?? 'Unknown' }})
+                                                            </span>
+                                                        @endif
+                                                    @endauth
+                                                @else
+                                                    <strong style="font-size: 0.7rem;">{{ $comment->user->full_name ?? $comment->user->name ?? 'User' }}:</strong>
+                                                @endif
+                                                {{-- END LOGIC ADMIN --}}
+
+                                                <span class="d-block mt-1" style="font-size: 0.75rem;">{{ $comment->content }}</span>
                                             </div>
-                                        @endforeach
+                                        @empty
+                                            <div class="text-center text-muted small py-2">Chưa có bình luận nào.</div>
+                                        @endforelse
                                     </div>
 
                                     @auth
@@ -125,9 +180,7 @@
                                             // Mặc định là cho phép comment
                                             $canComment = true;
 
-                                            // Kiểm tra logic:
-                                            // 1. Idea có thuộc năm học nào không?
-                                            // 2. Nếu có, ngày hiện tại đã vượt quá hạn đóng comment (Final Closure Date) chưa?
+                                            // Kiểm tra logic hạn đóng comment
                                             if ($idea->academicYear && now() > $idea->academicYear->final_closure_date) {
                                                 $canComment = false;
                                             }
@@ -151,18 +204,18 @@
                                             <div class="mt-2 p-2 bg-light text-center rounded border">
                                                 <small class="text-danger fw-bold d-flex align-items-center justify-content-center gap-2">
                                                     <i class="bi bi-lock-fill"></i>
-                                                    Comments are closed for this semester.
+                                                    Comments are closed.
                                                 </small>
                                             </div>
                                         @endif
                                     @endauth
-                                    {{-- ĐÃ XÓA PHẦN @else THANH LOGIN CỐ ĐỊNH Ở ĐÂY --}}
                                 </div>
                             </div>
                         </div>
                     </div>
                 @empty
                     <div class="col-12 text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
                         <p class="text-muted">No ideas have been shared yet.</p>
                     </div>
                 @endforelse

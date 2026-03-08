@@ -3,41 +3,24 @@
 @section('content')
 <div class="container py-5">
 
-    <div class="row mb-4 align-items-center">
-        {{-- <div class="col-md-8">
-            <h2 class="fw-bold text-primary"><i class="bi bi-speedometer2"></i> Coordinator Dashboard</h2>
-            <p class="text-muted">Overview of ideas in your Department.</p>
-        </div>
-        <div class="col-md-4 text-md-end"> --}}
-            {{-- Nút Export CSV --}}
-            {{-- <a href="{{ route('coordinator.export') }}" class="btn btn-success text-white shadow-sm fw-bold">
-                <i class="bi bi-file-earmark-spreadsheet me-2"></i> Export Report (CSV)
-            </a> --}}
-            <div class="d-flex justify-content-between align-items-center mb-1">
-
-        {{-- Phần Tiêu đề bên trái --}}
-        <div>
-            <h2 class="fw-bold text-primary"><i class="bi bi-speedometer2"></i> Coordinator Dashboard</h2>
+    {{-- PHẦN TIÊU ĐỀ & NÚT BẤM (Đã tối ưu cấu trúc Bootstrap) --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="fw-bold text-primary"><i class="bi bi-speedometer2 me-2"></i>Coordinator Dashboard</h2>
             <p class="text-muted mb-0">Overview of ideas in your Department.</p>
         </div>
 
-        {{-- Phần Nút bấm bên phải (Dạt sát góc phải) --}}
         <div class="d-flex gap-2">
-            {{-- Nút Download ZIP --}}
             <a href="{{ route('coordinator.download.zip') }}" class="btn btn-primary text-white shadow-sm fw-bold text-nowrap px-3">
                 <i class="bi bi-file-earmark-zip-fill me-1"></i> Download Zip
             </a>
-
-            {{-- Nút Export CSV --}}
             <a href="{{ route('coordinator.export') }}" class="btn btn-success text-white shadow-sm fw-bold text-nowrap px-3">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
             </a>
         </div>
-
-    </div>
-        </div>
     </div>
 
+    {{-- PHẦN THỐNG KÊ --}}
     <div class="row g-4 mb-5">
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 h-100">
@@ -69,9 +52,10 @@
         </div>
     </div>
 
+    {{-- PHẦN BẢNG DANH SÁCH IDEAS --}}
     <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 px-4">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2"></i> Latest Submissions</h5>
+        <div class="card-header bg-white py-3 px-4 border-bottom">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2 text-primary"></i> Latest Submissions</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -90,7 +74,7 @@
                             <tr>
                                 <td class="ps-4">
                                     <a href="{{ route('ideas.show', $idea->id) }}" class="fw-bold text-decoration-none text-dark">
-                                        {{ Str::limit($idea->title, 40) }}
+                                        {{ \Illuminate\Support\Str::limit($idea->title, 40) }}
                                     </a>
                                 </td>
                                 <td>
@@ -100,14 +84,13 @@
                                 </td>
                                 <td>
                                     @if($idea->is_anonymous)
-                                        <span class="text-muted fst-italic"><i class="bi bi-incognito"></i> Anonymous</span>
+                                        <span class="text-muted fst-italic"><i class="bi bi-incognito me-1"></i> Anonymous</span>
                                     @else
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar bg-secondary text-white rounded-circle me-2 d-flex justify-content-center align-items-center" style="width: 30px; height: 30px; font-size: 12px;">
-    {{ substr($idea->user->full_name, 0, 1) }}
-</div>
-
-{{ $idea->user->full_name }}
+                                            <div class="avatar bg-secondary text-white rounded-circle me-2 d-flex justify-content-center align-items-center" style="width: 30px; height: 30px; font-size: 14px; font-weight: bold;">
+                                                {{ substr($idea->user->full_name ?? $idea->user->name ?? 'U', 0, 1) }}
+                                            </div>
+                                            {{ $idea->user->full_name ?? $idea->user->name ?? 'Unknown' }}
                                         </div>
                                     @endif
                                 </td>
@@ -115,16 +98,17 @@
                                     {{ $idea->created_at->format('d M Y, H:i') }}
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a href="{{ route('ideas.show', $idea->id) }}" class="btn btn-sm btn-outline-primary shadow-sm">
-                                        View Detail <i class="bi bi-arrow-right"></i>
+                                    <a href="{{ route('ideas.show', $idea->id) }}" class="btn btn-sm btn-outline-primary shadow-sm rounded-pill px-3">
+                                        View Detail <i class="bi bi-arrow-right ms-1"></i>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                    No ideas submitted in your department yet.
+                                    <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary"></i>
+                                    <h6 class="fw-bold">No ideas found</h6>
+                                    <p class="mb-0">There are no ideas submitted in your department yet.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -132,9 +116,11 @@
                 </table>
             </div>
 
-            <div class="d-flex justify-content-center py-4">
-                {{ $ideas->links() }}
-            </div>
+            @if($ideas->hasPages())
+                <div class="d-flex justify-content-center py-4 border-top">
+                    {{ $ideas->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>

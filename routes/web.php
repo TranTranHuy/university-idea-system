@@ -54,6 +54,7 @@ Route::get('/download-idea-zip/{id}', [IdeaController::class, 'downloadSingleZip
 // 👇 2 DÒNG MỚI ĐỂ QUẢN LÝ DEADLINE 👇
     Route::get('/deadlines', [App\Http\Controllers\QAManagerController::class, 'deadlinesIndex'])->name('deadlines.index');
     Route::put('/deadlines/{id}', [App\Http\Controllers\QAManagerController::class, 'deadlinesUpdate'])->name('deadlines.update');
+
 });
 
 
@@ -71,6 +72,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Quản lý Idea
     Route::get('/manage-ideas', [IdeaController::class, 'adminIndex'])->name('ideas.index');
     Route::delete('/delete-idea/{id}', [IdeaController::class, 'adminDestroy'])->name('ideas.destroy');
+
+    // 👇 THÊM DÒNG NÀY VÀO ĐỂ QUẢN LÝ USER 👇
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'store', 'show']);
+
 });
 
 // COORDINATOR
@@ -88,3 +93,8 @@ Route::middleware(['auth', 'role:coordinator']) // Check đúng middleware role
         // Download ZIP
         Route::get('/download-zip', [CoordinatorController::class, 'downloadZip'])->name('download.zip');
     });
+    
+    // Route Thống kê cho Admin & QA Manager (Nằm độc lập)
+Route::get('/statistics', [\App\Http\Controllers\StatisticController::class, 'index'])
+    ->middleware('auth')
+    ->name('statistics.index');

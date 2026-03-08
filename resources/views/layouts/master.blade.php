@@ -57,8 +57,6 @@
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-
-</div>
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">
                 <i class="bi bi-lightbulb-fill"></i> University Idea System
@@ -75,57 +73,75 @@
                         <a class="nav-link" href="{{ route('ideas.create') }}">Submit Idea</a>
                     </li>
 
-                    {{-- --- BẮT ĐẦU LOGIC MANAGEMENT PANEL --- --}}
-                   @auth
-    @php
-        $panelRoute = '#';
+                    {{-- --- BẮT ĐẦU LOGIC MANAGEMENT PANEL TỐI ƯU --- --}}
+                    @auth
+                        @php
+                            $user = Auth::user();
+                            $roleName = $user->role->role_name ?? $user->role;
+                        @endphp
 
-        // Lấy User hiện tại
-        $user = Auth::user();
+                        @if(in_array($user->role_id, [1, 2, 3]))
 
-        // Lấy tên Role từ trong Object (Dựa trên hình ảnh bạn gửi: role->role_name)
-        // Dùng toán tử ?? '' để tránh lỗi nếu role bị null
-        $roleName = $user->role->role_name ?? $user->role;
+                            {{-- 1. Nếu là Admin --}}
+                            @if($user->role_id == 1 || in_array($roleName, ['Administrator', 'Admin', 'admin']))
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> Admin Panel
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('admin.academic-years.index') }}">
+                                                <i class="bi bi-calendar-range me-2 text-primary"></i> Manage Academic Years
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('admin.users.index') }}">
+                                                <i class="bi bi-people-fill me-2 text-success"></i> Manage Users
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('statistics.index') }}">
+                                                <i class="bi bi-bar-chart-fill me-2 text-info"></i> View Statistics
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
 
-        // 1. Check Admin
-        if ($roleName == 'Administrator' || $roleName == 'admin' || $roleName == 'Admin') {
-            $panelRoute = route('admin.academic-years.index');
-        }
+                            {{-- 2. Nếu là QA Manager --}}
+                            @elseif($user->role_id == 2 || $roleName == 'QA Manager')
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-speedometer2 me-1"></i> QA Panel
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 mt-2">
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('qam.categories.index') }}">
+                                                <i class="bi bi-tags me-2 text-primary"></i> Manage Categories
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('qam.deadlines.index') }}">
+                                                <i class="bi bi-calendar-event me-2 text-danger"></i> Manage Deadlines
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('statistics.index') }}">
+                                                <i class="bi bi-bar-chart-fill me-2 text-info"></i> View Statistics
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
 
-        // 2. Check QA Manager (Sửa lại đúng tên trong Database của bạn)
-        elseif ($roleName == 'QA Manager') {
-            $panelRoute = route('qam.categories.index');
-        }
-
-        // 3. Check Coordinator
-        elseif ($roleName == 'Coordinator' || $roleName == 'QA Coordinator') {
-            $panelRoute = route('coordinator.dashboard');
-        }
-    @endphp
-
-{{-- Hiển thị nút --}}
-    @if(in_array(Auth::user()->role_id, [1, 2, 3]))
-        @if($roleName == 'QA Manager')
-            {{-- Menu Dropdown dành riêng cho QA Manager --}}
-            <li class="nav-item dropdown">
-                <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-speedometer2 me-1"></i> QA Panel
-                </a>
-                <ul class="dropdown-menu shadow border-0 mt-2">
-                    <li><a class="dropdown-item" href="{{ route('qam.categories.index') }}"><i class="bi bi-tags me-2 text-primary"></i>Manage Categories</a></li>
-                    <li><a class="dropdown-item" href="{{ route('qam.deadlines.index') }}"><i class="bi bi-calendar-event me-2 text-danger"></i>Manage Deadlines</a></li>
-                </ul>
-            </li>
-        @else
-            {{-- Nút mặc định cho Admin và Coordinator --}}
-            <li class="nav-item">
-                <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm" href="{{ $panelRoute }}">
-                    <i class="bi bi-speedometer2 me-1"></i> Management Panel
-                </a>
-            </li>
-        @endif
-    @endif
-@endauth
+                            {{-- 3. Nếu là Coordinator --}}
+                            @elseif($user->role_id == 3 || in_array($roleName, ['Coordinator', 'QA Coordinator']))
+                                <li class="nav-item">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm" href="{{ route('coordinator.dashboard') }}">
+                                        <i class="bi bi-speedometer2 me-1"></i> Management Panel
+                                    </a>
+                                </li>
+                            @endif
+                        @endif
+                    @endauth
                     {{-- --- KẾT THÚC LOGIC --- --}}
 
                     @guest
@@ -135,8 +151,8 @@
                     @else
                         <li class="nav-item dropdown ms-lg-3">
                             <a class="dropdown-toggle btn btn-outline-light px-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-    <i class="bi bi-person-circle"></i> Hi, {{ Auth::user()->full_name ?? Auth::user()->name }}
-</a>
+                                <i class="bi bi-person-circle"></i> Hi, {{ Auth::user()->full_name ?? Auth::user()->name }}
+                            </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                 <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -157,7 +173,7 @@
     </nav>
 
     <div class="container mt-4" style="min-height: 70vh;">
-        {{-- --- PHẦN HIỂN THỊ THÔNG BÁO (Đã sửa lỗi lặp) --- --}}
+        {{-- --- PHẦN HIỂN THỊ THÔNG BÁO --- --}}
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -173,7 +189,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-        {{-- --- KẾT THÚC PHẦN THÔNG BÁO --- --}}
 
         @yield('content')
     </div>
