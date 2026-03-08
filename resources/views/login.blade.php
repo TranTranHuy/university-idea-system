@@ -48,7 +48,7 @@
         </div>
 
         <div class="image-section">
-             <img src="{{ asset('images/login_image_3d.png') }}" alt="Login Illustration">
+             <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" alt="Team Illustration" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
         </div>
     </div>
 
