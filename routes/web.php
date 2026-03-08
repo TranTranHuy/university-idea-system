@@ -8,6 +8,9 @@ use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CoordinatorController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\DepartmentController;
 
 
 // --- 1. AUTHENTICATION ---
@@ -62,8 +65,17 @@ Route::get('/download-idea-zip/{id}', [IdeaController::class, 'downloadSingleZip
 // ADMIN
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function() { return view('admin.dashboard'); })->name('dashboard');
-    // Quản lý Academic Year (Dùng resource cho gọn, nó tự sinh ra index, create, store...)
+
+    // Quản lý Academic Year
     Route::resource('academic-years', AcademicYearController::class);
+
+    // Tạm thời trỏ thẳng ra View để test giao diện
+    Route::get('/statistics', function () {
+        return view('admin.statistics');
+    })->name('statistics'); // Group sẽ tự động ghép thành 'admin.statistics'
+    Route::resource('users', UserController::class);
+    Route::resource('departments', DepartmentController::class);
+});
 
     // Quản lý Deadline
     Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('academic-years.index');
@@ -73,7 +85,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Quản lý Idea
     Route::get('/manage-ideas', [IdeaController::class, 'adminIndex'])->name('ideas.index');
     Route::delete('/delete-idea/{id}', [IdeaController::class, 'adminDestroy'])->name('ideas.destroy');
-});
+
 
 // COORDINATOR
 
@@ -90,3 +102,14 @@ Route::middleware(['auth', 'role:coordinator']) // Check đúng middleware role
         // Download ZIP
         Route::get('/download-zip', [CoordinatorController::class, 'downloadZip'])->name('download.zip');
     });
+
+    //RESET PASSWORD
+    // 1. Form nhập email
+Route::get('forgot-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
+// 2. Xử lý check email (không gửi mail, chuyển thẳng sang form đặt pass mới)
+Route::post('forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// 3. Form nhập mật khẩu mới
+Route::get('reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+// 4. Xử lý lưu mật khẩu mới vào database
+Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');

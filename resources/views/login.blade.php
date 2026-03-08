@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập</title>
+    <title>Login</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
@@ -36,19 +36,24 @@
                     <label>
                         <input type="checkbox" name="remember"> Remember me
                     </label>
-                    <a href="#">Forgot Password</a>
+                    <a href="{{ route('password.request') }}" style="color:#2f80ed; font-weight:600; text-decoration:none;">
+    Forgot Password
+</a>
                 </div>
 
                 <button type="submit" class="btn-submit">Login</button>
 
                 <div class="footer-text">
-                    Don't have an account? <a href="{{ route('register') }}">Sign up</a>
-                </div>
+    Don't have an account?
+    <a href="{{ route('register') }}" style="color:#2f80ed; font-weight:600; text-decoration:none;">
+        Sign up
+    </a>
+</div>
             </form>
         </div>
 
         <div class="image-section">
-             <img src="{{ asset('images/login_image_3d.png') }}" alt="Login Illustration">
+            <img src="https://st.depositphotos.com/18722762/51522/v/450/depositphotos_515228796-stock-illustration-online-registration-sign-login-account.jpg">
         </div>
     </div>
 
