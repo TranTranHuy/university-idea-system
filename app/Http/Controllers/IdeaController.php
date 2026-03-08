@@ -276,4 +276,67 @@ class IdeaController extends Controller
 
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
+
+    // --- MỞ FORM CHỈNH SỬA IDEA ---
+    public function edit($id)
+    {
+        $idea = Idea::with('academicYear')->findOrFail($id);
+
+        // Bảo mật 1: Kiểm tra xem người đang đăng nhập có phải chủ nhân Idea không
+        if ($idea->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'You do not have permission to edit this idea.');
+        }
+
+        // Bảo mật 2: Kiểm tra hạn chót (Closure Date)
+        if ($idea->academicYear && now() > $idea->academicYear->closure_date) {
+            return redirect()->back()->with('error', 'The deadline for editing this idea has passed.');
+        }
+
+        $categories = Category::all();
+        return view('ideas.edit', compact('idea', 'categories'));
+    }
+
+    // --- LƯU DỮ LIỆU CHỈNH SỬA VÀO DATABASE ---
+    public function update(Request $request, $id)
+    {
+        $idea = Idea::with('academicYear')->findOrFail($id);
+
+        // Chặn luồng trực tiếp (phòng hờ user cố tình dùng Postman/phần mềm thứ 3 ép gửi data lên)
+        if ($idea->user_id !== Auth::id() || ($idea->academicYear && now() > $idea->academicYear->closure_date)) {
+            abort(403, 'Unauthorized action or deadline passed.');
+        }
+
+        // Validate dữ liệu mới
+        $request->validate([
+            'title' => 'required|max:255',
+            'content' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            // Bạn có thể mở rộng validate file ở đây nếu muốn cho họ up thêm file
+        ]);
+
+        // Cập nhật thông tin
+        $idea->title = $request->title;
+        $idea->content = $request->input('content');
+        $idea->category_id = $request->category_id;
+        // $idea->is_anonymous = $request->has('is_anonymous'); // Bỏ comment nếu cho phép đổi chế độ ẩn danh
+        
+        // 3. Xử lý File đính kèm (Nếu có up file mới)
+        if ($request->hasFile('document')) {
+            // (Tùy chọn) Có thể viết code xóa file cũ đi cho nhẹ server:
+            // if ($idea->document && \Storage::disk('public')->exists($idea->document)) {
+            //     \Storage::disk('public')->delete($idea->document);
+            // }
+
+            // Lưu file mới vào thư mục 'documents' trong storage/app/public
+            $path = $request->file('document')->store('documents', 'public');
+            
+            // Cập nhật đường dẫn mới vào Database (hoặc json_encode nếu team bạn lưu dạng JSON mảng)
+            $idea->document = $path; 
+        }
+
+        $idea->save();
+
+        // Trả về trang Profile kèm thông báo xanh lá
+        return redirect()->route('staff.profile')->with('success', 'Your idea has been updated successfully!');
+    }
 }

@@ -21,5 +21,11 @@ class Comment extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Khai báo quan hệ với Idea
+    public function idea()
+    {
+        return $this->belongsTo(Idea::class, 'idea_id');
+    }
+
 }
 

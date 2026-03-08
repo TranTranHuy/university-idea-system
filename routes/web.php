@@ -11,6 +11,7 @@ use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ProfileController;
 
 
 // --- 1. AUTHENTICATION ---
@@ -113,3 +114,16 @@ Route::post('forgot-password', [PasswordResetController::class, 'sendResetLinkEm
 Route::get('reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 // 4. Xử lý lưu mật khẩu mới vào database
 Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+
+//STAFF
+Route::middleware(['auth'])->group(function () {
+    // Trang xem profile
+    Route::get('/profile', [ProfileController::class, 'index'])->name('staff.profile');
+    // Cập nhật thông tin
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('staff.profile.update'); 
+    // Cập nhật mật khẩu
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('staff.profile.password');
+    
+    Route::get('/ideas/{id}/edit', [IdeaController::class, 'edit'])->name('ideas.edit');
+    Route::put('/ideas/{id}', [IdeaController::class, 'update'])->name('ideas.update');
+});
