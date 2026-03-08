@@ -61,6 +61,7 @@ class AcademicYearController extends Controller
     {
         $year = AcademicYear::findOrFail($id);
 
+        // 1. VALIDATE CƠ BẢN (Giữ nguyên)
         $request->validate([
             'name' => 'required|string|unique:academic_years,name,'.$id,
             'start_date' => 'required|date',

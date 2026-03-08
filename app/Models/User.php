@@ -68,4 +68,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Idea::class);
     }
+    public function comments()
+    {
+        return $this->hasMany(Comment::class); // Một staff có nhiều bình luận
+    }
 }

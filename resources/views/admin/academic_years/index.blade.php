@@ -1,8 +1,6 @@
 
 @extends('layouts.admin')
 @section('admin_content')
-
-{{-- @section('content') --}}
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -10,7 +8,7 @@
             <p class="text-muted mb-0">Manage university semesters and deadlines.</p>
         </div>
         <a href="{{ route('admin.academic-years.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
-            <i class="bi bi-plus-lg me-2"></i> Create New Year
+            <i class="bi bi-plus-lg mse-2"></i> Create New Year
         </a>
     </div>
 
@@ -48,20 +46,30 @@
                                 </div>
                             </td>
                             <td>
-                                {{-- Logic hiển thị trạng thái bằng màu sắc --}}
+                                {{-- Logic hiển thị trạng thái chi tiết --}}
                                 @php
                                     $now = now();
+                                    // Mặc định là Đóng (Closed)
                                     $statusClass = 'bg-secondary';
                                     $statusLabel = 'Closed';
 
+                                    // 1. Chưa bắt đầu
                                     if ($now < $year->start_date) {
                                         $statusClass = 'bg-info text-dark';
                                         $statusLabel = 'Upcoming';
-                                    } elseif ($now >= $year->start_date && $now <= $year->final_closure_date) {
-                                        $statusClass = 'bg-success';
-                                        $statusLabel = 'Active';
+                                    } 
+                                    // 2. Đang trong thời gian NỘP IDEA (Open)
+                                    elseif ($now >= $year->start_date && $now <= $year->closure_date) {
+                                        $statusClass = 'bg-success'; // Màu xanh lá
+                                        $statusLabel = 'Open for Submission';
+                                    } 
+                                    // 3. Hết hạn nộp Idea, nhưng vẫn cho COMMENT (Partial Open)
+                                    elseif ($now > $year->closure_date && $now <= $year->final_closure_date) {
+                                        $statusClass = 'bg-warning text-dark'; // Màu vàng
+                                        $statusLabel = 'Submission Closed';
                                     }
                                 @endphp
+
                                 <span class="badge {{ $statusClass }} rounded-pill px-3 py-2">
                                     {{ $statusLabel }}
                                 </span>

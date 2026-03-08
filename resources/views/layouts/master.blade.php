@@ -265,7 +265,7 @@
 
             {{-- CHỈ HIỂN THỊ PROFILE CHO USER BÌNH THƯỜNG (role_id không phải 1, 2, hoặc 3) --}}
             @if(!in_array(Auth::user()->role_id, [1, 2, 3]))
-                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><a class="dropdown-item" href="{{ route('staff.profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
                 <li><hr class="dropdown-divider"></li>
             @endif
 
