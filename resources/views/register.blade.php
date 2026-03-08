@@ -58,18 +58,19 @@
                         </select>
                     </div>
                 </div> --}}
-                <div class="input-group" style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
-    <label style="margin-bottom: 0; white-space: nowrap;">Department</label>
+                {{-- Khối chọn Department --}}
+<div style="margin-bottom: 1.2rem;">
+    <label for="department_id" style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #4b5563;">
+        Department
+    </label>
 
-    <select id="department_id" name="department_id" class="form-select" required>
-    <option value="" disabled selected>Select your department</option>
-    @foreach ($departments as $department)
-        {{-- Nhớ gọi department_name --}}
-        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-    @endforeach
-</select>
-
-    <input type="hidden" name="role_id" value="2">
+    <select id="department_id" name="department_id" required
+            style="width: 100%; padding: 0.6rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; background-color: #fff; font-size: 0.9rem; color: #374151; cursor: pointer;">
+        <option value="" disabled selected>Select your department</option>
+        @foreach ($departments as $department)
+            <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+        @endforeach
+    </select>
 </div>
 
                 <div style="margin-top:15px; font-size:14px; color:#666;">

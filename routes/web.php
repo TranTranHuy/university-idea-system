@@ -9,14 +9,26 @@ use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\UserController;
 
 
+// // --- 1. AUTHENTICATION ---
+// Route::get('/register', function () { return view('register'); })->name('register');
+// Route::get('/login', function () { return view('login'); })->name('login');
+// Route::post('/register', [AuthController::class, 'register']);
+// Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // --- 1. AUTHENTICATION ---
-Route::get('/register', function () { return view('register'); })->name('register');
+
+// 1. Route MỞ form Đăng ký (Trỏ vào hàm showRegister để lấy phòng ban)
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+
+// 2. Route LƯU dữ liệu Đăng ký (Gắn thêm name để dùng trong form)
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+// 3. Các route Login & Logout (Giữ nguyên của ní)
 Route::get('/login', function () { return view('login'); })->name('login');
-Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
