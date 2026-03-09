@@ -30,12 +30,13 @@ class AuthController extends Controller
         ]);
 
         // Tạo User mới
+        // Tạo User mới trong hàm register()
         User::create([
             'full_name' => $request->full_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_id' => 1,
-            'department_id' => $request->department_id, // 👇 ĐÃ SỬA: Lấy đúng ID phòng ban mà người dùng chọn ở Form
+            'role_id' => 4,  // 👇 ĐÃ SỬA: Chốt cứng số 4 (Quyền Staff) cho người mới đăng ký
+            'department_id' => $request->department_id,
             'is_agreed_terms' => 1
         ]);
 
@@ -59,7 +60,7 @@ class AuthController extends Controller
 
         // 👇 ĐÃ SỬA: Trả về trang cũ kèm lỗi
         return back()->withErrors([
-            'email' => 'Thông tin đăng nhập không chính xác.',
+            'email' => 'The login information is incorrect. Please try again.',
         ]);
     }
 

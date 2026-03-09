@@ -72,10 +72,19 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <a href="{{ route('qam.categories.edit', $cat->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <form action="{{ route('qam.categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this category?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                            </form>
+
+                                            {{-- KIỂM TRA ĐIỀU KIỆN CHẶN XÓA --}}
+                                            @if($cat->ideas()->exists())
+                                                {{-- Nếu đã có Idea dùng, disable nút và hiện tooltip --}}
+                                                <button type="button" class="btn btn-sm btn-secondary opacity-50" title="Cannot be deleted because Idea is already using it." style="cursor: not-allowed;" onclick="alert('Danh mục này đang được sử dụng bởi các ý tưởng, không thể xóa!')">
+                                                    Delete
+                                                </button>
+                                            @else
+                                                {{-- Nếu chưa có Idea nào, gọi hàm mở Modal --}}
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="openDeleteModal({{ $cat->id }}, '{{ $cat->name }}')">
+                                                    Delete
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -145,4 +154,44 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the category <strong id="categoryNameToDelete" class="text-dark"></strong>?
+                <br>
+                <span class="text-muted" style="font-size: 0.9em;">This action cannot be undone.</span>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteCategoryForm" method="POST" class="m-0 p-0">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(id, name) {
+        // 1. Điền tên Category vào dòng chữ trong Modal
+        document.getElementById('categoryNameToDelete').innerText = "'" + name + "'";
+
+        // 2. Thay đổi cái route Xóa cho đúng với ID của Category
+        let form = document.getElementById('deleteCategoryForm');
+        let route = "{{ route('qam.categories.destroy', ':id') }}";
+        form.action = route.replace(':id', id);
+
+        // 3. Gọi Modal của Bootstrap hiện lên
+        let deleteModal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
+        deleteModal.show();
+    }
+</script>
 @endsection

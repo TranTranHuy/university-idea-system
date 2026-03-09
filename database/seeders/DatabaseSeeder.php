@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
 
         // --- B. Tài khoản QA MANAGER (Quản lý chất lượng) ---
         User::create([
-            'full_name' => 'QA Manager Boss',
+            'full_name' => 'QA Manager ',
             'email' => 'qam@gmail.com',
             'password' => Hash::make('123456'),
             'role_id' => $qamRole->id,
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
 
         // --- D. Tài khoản STAFF (Nhân viên Khoa IT) ---
         User::create([
-            'full_name' => 'Nguyen Van Staff',
+            'full_name' => 'Nguyen Van IT',
             'email' => 'staff_it@gmail.com',
             'password' => Hash::make('123456'),
             'role_id' => $staffRole->id,

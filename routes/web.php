@@ -12,6 +12,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\StatisticsController;
 
 // --- 1. AUTHENTICATION ---
 // 1. Route MỞ form Đăng ký
@@ -67,19 +68,23 @@ Route::middleware(['auth', 'role:qam'])->prefix('qa-manager')->name('qam.')->gro
 
 // ==================== ADMIN ====================
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function() { return view('admin.dashboard'); })->name('dashboard');
 
-    // Quản lý hệ thống cốt lõi bằng Route::resource (Đã bao gồm thêm, sửa, xóa)
+    // 1. Dashboard Thống Kê
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Route::get('/statistics', function () { return view('admin.statistics'); })->name('statistics');
+    Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics');
+
+    // 2. Quản lý hệ thống cốt lõi bằng Route::resource
     Route::resource('users', UserController::class);
     Route::resource('departments', DepartmentController::class);
     Route::resource('academic-years', AcademicYearController::class);
 
-    // Thống kê
-    Route::get('/statistics', function () { return view('admin.statistics'); })->name('statistics');
-
-    // Quản lý Idea của Admin (Đã đưa vào trong group bảo vệ)
+    // 3. Quản lý Idea của Admin
     Route::get('/manage-ideas', [IdeaController::class, 'adminIndex'])->name('ideas.index');
     Route::delete('/delete-idea/{id}', [IdeaController::class, 'adminDestroy'])->name('ideas.destroy');
+
+    // 4. Gắn route xem bài viết của User
+    Route::get('/users/{id}/ideas', [UserController::class, 'showIdeas'])->name('users.ideas');
 });
 
 

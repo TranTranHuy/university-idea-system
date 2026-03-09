@@ -3,44 +3,41 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <--- Nhớ use cái này để chạy Query
+use App\Models\Idea;
+use App\Models\User;
+use App\Models\Department;
+use App\Models\AcademicYear;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // --- THỐNG KÊ 1: Số lượng Idea theo từng Phòng Ban (Department) ---
-        // Logic: Join bảng Ideas -> Users -> Departments để đếm
-        $ideasByDept = DB::table('ideas')
-            ->join('users', 'ideas.user_id', '=', 'users.id')
-            ->join('departments', 'users.department_id', '=', 'departments.id')
-            ->select('departments.name', DB::raw('count(*) as total'))
-            ->groupBy('departments.name')
+        // 1. Thống kê tổng quan (4 thẻ trên đầu)
+        $totalIdeas = Idea::count();
+        $totalUsers = User::count();
+        $totalDepts = Department::count();
+        $totalAcademicYears = AcademicYear::count();
+
+        // 2. Lấy 5 ý tưởng mới nhất (Latest Ideas)
+        $latestIdeas = Idea::with('user')->latest()->take(5)->get();
+
+        // 3. Lấy 5 ý tưởng phổ biến nhất (Dựa trên số lượt Upvote/Like)
+        // Chỗ này tui giả sử ní có bảng reactions/votes, nếu chưa có thì lấy theo view hoặc comment
+        $popularIdeas = Idea::with(['user.department'])
+            // ->withCount(['reactions as upvotes_count' => function($query) {
+            //     // $query->where('reaction_type', 'like'); // Hoặc logic tính điểm của ní
+            // }])
+            // ->orderBy('upvotes_count', 'desc')
+            // ->take(5)
+            // ->get();
+            ->latest()
+            ->take(5)
             ->get();
 
-        // Chuẩn bị dữ liệu cho Frontend (Tách thành 2 mảng riêng biệt)
-        $deptLabels = $ideasByDept->pluck('name'); // ['IT', 'Business', ...]
-        $deptData   = $ideasByDept->pluck('total'); // [10, 5, ...]
-
-
-        // --- THỐNG KÊ 2: (Nâng cao) Số người đóng góp theo từng phòng ban ---
-        // Logic: Đếm distinct user_id trong bảng ideas
-        $contributorsByDept = DB::table('ideas')
-            ->join('users', 'ideas.user_id', '=', 'users.id')
-            ->join('departments', 'users.department_id', '=', 'departments.id')
-            ->select('departments.name', DB::raw('count(DISTINCT ideas.user_id) as total_users'))
-            ->groupBy('departments.name')
-            ->get();
-            
-        $contributorData = $contributorsByDept->pluck('total_users');
-
-
-        // Trả dữ liệu về View
         return view('admin.dashboard', compact(
-            'deptLabels', 
-            'deptData', 
-            'contributorData'
+            'totalIdeas', 'totalUsers', 'totalDepts', 'totalAcademicYears',
+            'latestIdeas', 'popularIdeas'
         ));
     }
 }

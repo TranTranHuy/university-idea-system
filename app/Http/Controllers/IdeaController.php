@@ -7,17 +7,32 @@ use App\Models\Idea;
 use App\Models\Category;
 use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use App\Mail\StaffIdeaSubmitted;
+use Illuminate\Support\Facades\Log;
 
 class IdeaController extends Controller
 {
-    // 1. Trang danh sách Ideas (Hiển thị 6 cái/trang)
+    // --- 1. TRANG DANH SÁCH IDEAS (TRANG CHỦ) ---
     public function index(Request $request)
     {
         $query = Idea::with(['user', 'category', 'likes', 'comments.user']);
+
+        // CHÈN LOGIC LỌC PHÒNG BAN: Dùng hasRole thay vì ID gán cứng
+        if (Auth::check()) {
+            /** @var \App\Models\User $currentUser */
+            $currentUser = Auth::user();
+
+            if ($currentUser->hasRole(['QA Coordinator', 'Staff'])) {
+                $query->whereHas('user', function ($q) use ($currentUser) {
+                    $q->where('department_id', $currentUser->department_id);
+                });
+            }
+        }
 
         if ($request->sort == 'popular') {
             $query->withCount('likes')->orderBy('likes_count', 'desc');
@@ -29,6 +44,7 @@ class IdeaController extends Controller
         return view('home', compact('ideas'));
     }
 
+    // --- 2. TRANG ĐĂNG IDEA MỚI ---
     public function create()
     {
         $categories = Category::all();
@@ -38,6 +54,7 @@ class IdeaController extends Controller
         return view('createideapage', compact('categories', 'currentYear'));
     }
 
+    // --- 3. LƯU IDEA MỚI VÀ GỬI MAIL CHO QAC ---
     public function store(Request $request)
     {
         $currentYear = AcademicYear::where('start_date', '<=', now())
@@ -77,7 +94,7 @@ class IdeaController extends Controller
         $idea->document = $filePaths;
         $idea->save();
 
-        // LOGIC GỬI MAIL
+        // LOGIC GỬI MAIL: Tự động tìm QAC cùng khoa
         $studentDeptId = Auth::user()->department_id;
         $coordinators = User::where('department_id', $studentDeptId)
                             ->whereHas('role', function($q) {
@@ -86,22 +103,24 @@ class IdeaController extends Controller
 
         foreach ($coordinators as $coord) {
             try {
-                \Illuminate\Support\Facades\Mail::to($coord->email)
-                     ->send(new \App\Mail\NewIdeaNotification($idea));
+                // Sửa lỗi: Đã đổi sang gửi StaffIdeaSubmitted cho đúng chức năng
+                Mail::to($coord->email)->send(new StaffIdeaSubmitted($idea));
             } catch (\Exception $e) {
-                // Log lỗi nếu cần
+                \Log::error("Email QAC error: " . $e->getMessage());
             }
         }
 
         return redirect()->route('home')->with('success', 'Nộp ý tưởng thành công!');
     }
 
+    // --- 4. ADMIN XEM DANH SÁCH ---
     public function adminIndex()
     {
         $ideas = Idea::with(['user', 'category'])->latest()->paginate(15);
         return view('admin.ideas_manage', compact('ideas'));
     }
 
+    // --- 5. ADMIN XÓA IDEA ---
     public function adminDestroy($id)
     {
         $idea = Idea::findOrFail($id);
@@ -117,16 +136,30 @@ class IdeaController extends Controller
         return redirect()->back()->with('success', 'Xóa ý tưởng thành công!');
     }
 
+    // --- 6. CHI TIẾT 1 IDEA ---
     public function show($id)
     {
         $idea = Idea::with(['user', 'category', 'comments.user'])->findOrFail($id);
         return view('ideas.show', compact('idea'));
     }
 
+    // --- 7. TẢI FILE CSV (CÓ LỌC PHÒNG BAN) ---
     public function exportCsv()
     {
         $fileName = 'ideas_export_' . date('Y-m-d_H-i') . '.csv';
-        $ideas = Idea::with(['user.department', 'category'])->latest()->get();
+        $query = Idea::with(['user.department', 'category'])->latest();
+
+        if (Auth::check()) {
+            /** @var \App\Models\User $currentUser */
+            $currentUser = Auth::user();
+            if ($currentUser->hasRole(['QA Coordinator', 'Staff'])) {
+                $query->whereHas('user', function ($q) use ($currentUser) {
+                    $q->where('department_id', $currentUser->department_id);
+                });
+            }
+        }
+
+        $ideas = $query->get();
 
         $headers = [
             "Content-type"        => "text/csv",
@@ -138,6 +171,7 @@ class IdeaController extends Controller
 
         $callback = function() use($ideas) {
             $file = fopen('php://output', 'w');
+            fputs($file, (chr(0xEF) . chr(0xBB) . chr(0xBF))); // Fix font tiếng Việt
             fputcsv($file, ['ID', 'Title', 'Content', 'Author Name', 'Department', 'Category', 'Submission Date']);
             foreach ($ideas as $idea) {
                 fputcsv($file, [
@@ -155,25 +189,42 @@ class IdeaController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    // --- TẢI TẤT CẢ FILE DƯỚI DẠNG ZIP ---
+    // --- 8. TẢI ZIP TẤT CẢ FILE (CÓ LỌC PHÒNG BAN) ---
     public function downloadZip()
     {
         $zip = new ZipArchive;
         $fileName = 'all_attachments_' . date('Ymd_His') . '.zip';
         $zipPath = storage_path('app/public/' . $fileName);
 
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-            $ideas = Idea::whereNotNull('document')->get();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            $query = Idea::whereNotNull('document');
+
+            if (Auth::check()) {
+                /** @var \App\Models\User $currentUser */
+                $currentUser = Auth::user();
+                if ($currentUser->hasRole(['QA Coordinator', 'Staff'])) {
+                    $query->whereHas('user', function ($q) use ($currentUser) {
+                        $q->where('department_id', $currentUser->department_id);
+                    });
+                }
+            }
+
+            $ideas = $query->get();
             $count = 0;
 
             foreach ($ideas as $idea) {
-                $documents = is_array($idea->document) ? $idea->document : json_decode($idea->document, true);
-                if (!empty($documents)) {
+                $documents = $idea->document;
+                if (is_string($documents)) {
+                    $decoded = json_decode($documents, true);
+                    $documents = is_array($decoded) ? $decoded : [$documents];
+                }
+
+                if (is_array($documents)) {
                     foreach ($documents as $filePath) {
+                        if ($filePath === 'Array') continue;
                         $fullPath = storage_path('app/public/' . $filePath);
                         if (file_exists($fullPath)) {
-                            $nameInZip = 'Idea_' . $idea->id . '_' . basename($filePath);
-                            $zip->addFile($fullPath, $nameInZip);
+                            $zip->addFile($fullPath, 'Idea_' . $idea->id . '/' . basename($filePath));
                             $count++;
                         }
                     }
@@ -182,161 +233,115 @@ class IdeaController extends Controller
             $zip->close();
 
             if ($count === 0) {
-                return redirect()->back()->with('error', 'Không có tài liệu nào để nén.');
+                if(file_exists($zipPath)) @unlink($zipPath);
+                return redirect()->back()->with('error', 'Không có tài liệu nào thuộc khoa của bạn.');
             }
         }
-
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    // --- TẢI FILE ZIP CỦA MỘT Ý TƯỞNG CHỈ ĐỊNH ---
+    // --- 9. TẢI ZIP CỦA 1 Ý TƯỞNG ---
     public function downloadSingleZip($id)
     {
         $idea = Idea::findOrFail($id);
-        $documents = is_array($idea->document) ? $idea->document : json_decode($idea->document, true);
-
-        if (empty($documents)) {
-            return redirect()->back()->with('error', 'Ý tưởng này không có tệp đính kèm.');
+        $documents = $idea->document;
+        if (is_string($documents)) {
+            $decoded = json_decode($documents, true);
+            $documents = is_array($decoded) ? $decoded : [$documents];
         }
 
+        if (empty($documents)) return redirect()->back()->with('error', 'Không có tệp đính kèm.');
+
         $zip = new ZipArchive;
-        $fileName = 'Idea_' . $idea->id . '_attachments.zip';
+        $fileName = 'Idea_' . $idea->id . '_files.zip';
         $zipPath = storage_path('app/public/' . $fileName);
 
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($documents as $filePath) {
                 $fullPath = storage_path('app/public/' . $filePath);
-                if (file_exists($fullPath)) {
-                    $zip->addFile($fullPath, basename($filePath));
-                }
+                if (file_exists($fullPath)) $zip->addFile($fullPath, basename($filePath));
             }
             $zip->close();
         }
-
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    // --- TẢI FILE ZIP THEO NĂM HỌC ---
+    // --- 10. TẢI ZIP THEO NĂM HỌC (CÓ LỌC PHÒNG BAN) ---
     public function downloadZipByYear($year_id)
     {
-        $year = \App\Models\AcademicYear::findOrFail($year_id);
-        $zip = new \ZipArchive;
-
-        // Tên file ZIP tải về: VD: Documents_spring-2026.zip
-        $fileName = 'Documents_' . \Illuminate\Support\Str::slug($year->name) . '.zip';
+        $year = AcademicYear::findOrFail($year_id);
+        $zip = new ZipArchive;
+        $fileName = 'Docs_' . Str::slug($year->name) . '.zip';
         $zipPath = storage_path('app/public/' . $fileName);
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            $query = Idea::where('academic_year_id', $year_id)->whereNotNull('document')->with(['user', 'category']);
 
-            // Lấy các Idea thuộc Năm học này và CÓ TÀI LIỆU
-            $ideas = \App\Models\Idea::where('academic_year_id', $year_id)
-                        ->whereNotNull('document')
-                        ->with(['user', 'category'])
-                        ->get();
-
-            if ($ideas->isEmpty()) {
-                $zip->close();
-                return back()->with('error', 'Kỳ học này chưa có ý tưởng nào chứa tài liệu đính kèm!');
+            if (Auth::check()) {
+                /** @var \App\Models\User $currentUser */
+                $currentUser = Auth::user();
+                if ($currentUser->hasRole(['QA Coordinator', 'Staff'])) {
+                    $query->whereHas('user', function ($q) use ($currentUser) {
+                        $q->where('department_id', $currentUser->department_id);
+                    });
+                }
             }
 
+            $ideas = $query->get();
             $hasFiles = false;
 
             foreach ($ideas as $idea) {
-                // Xử lý dữ liệu cột document
-                $documents = $idea->document;
-                if (is_string($documents)) {
-                    $documents = json_decode($documents, true) ?? [$documents];
-                }
-
+                $documents = is_string($idea->document) ? json_decode($idea->document, true) : $idea->document;
                 if (!is_array($documents)) continue;
 
-                foreach ($documents as $filePathRaw) {
-                    $fullPath = storage_path('app/public/' . $filePathRaw);
-
+                foreach ($documents as $filePath) {
+                    $fullPath = storage_path('app/public/' . $filePath);
                     if (file_exists($fullPath)) {
                         $hasFiles = true;
-                        // Phân loại thư mục trong ZIP: Tên_Danh_mục / Tên_Tác_giả_TênFile
-                        $folderName = \Illuminate\Support\Str::slug($idea->category->name ?? 'Uncategorized');
-                        $studentName = \Illuminate\Support\Str::slug($idea->user->email ?? 'Anonymous');
-                        $fileNameInZip = basename($fullPath);
-
-                        $zipInternalPath = $folderName . '/' . $studentName . '_' . $fileNameInZip;
-                        $zip->addFile($fullPath, $zipInternalPath);
+                        $folder = Str::slug($idea->category->name ?? 'Uncategorized');
+                        $zip->addFile($fullPath, $folder . '/' . basename($filePath));
                     }
                 }
             }
-
             $zip->close();
-
-            if (!$hasFiles) {
-                if (file_exists($zipPath)) @unlink($zipPath);
-                return back()->with('error', 'Các file đính kèm đã bị thất lạc khỏi máy chủ!');
-            }
+            if (!$hasFiles) return back()->with('error', 'Không tìm thấy file nào.');
         }
-
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    // --- MỞ FORM CHỈNH SỬA IDEA ---
+    // --- 11. MỞ FORM CHỈNH SỬA ---
     public function edit($id)
     {
         $idea = Idea::with('academicYear')->findOrFail($id);
-
-        // Bảo mật 1: Kiểm tra xem người đang đăng nhập có phải chủ nhân Idea không
-        if ($idea->user_id !== Auth::id()) {
-            return redirect()->back()->with('error', 'You do not have permission to edit this idea.');
-        }
-
-        // Bảo mật 2: Kiểm tra hạn chót (Closure Date)
-        if ($idea->academicYear && now() > $idea->academicYear->closure_date) {
-            return redirect()->back()->with('error', 'The deadline for editing this idea has passed.');
-        }
+        if ($idea->user_id !== Auth::id()) return redirect()->back()->with('error', 'Từ chối quyền truy cập.');
+        if ($idea->academicYear && now() > $idea->academicYear->closure_date) return redirect()->back()->with('error', 'Đã quá hạn chỉnh sửa.');
 
         $categories = Category::all();
         return view('ideas.edit', compact('idea', 'categories'));
     }
 
-    // --- LƯU DỮ LIỆU CHỈNH SỬA VÀO DATABASE ---
+    // --- 12. CẬP NHẬT Ý TƯỞNG ---
     public function update(Request $request, $id)
     {
         $idea = Idea::with('academicYear')->findOrFail($id);
+        if ($idea->user_id !== Auth::id() || ($idea->academicYear && now() > $idea->academicYear->closure_date)) abort(403);
 
-        // Chặn luồng trực tiếp (phòng hờ user cố tình dùng Postman/phần mềm thứ 3 ép gửi data lên)
-        if ($idea->user_id !== Auth::id() || ($idea->academicYear && now() > $idea->academicYear->closure_date)) {
-            abort(403, 'Unauthorized action or deadline passed.');
-        }
-
-        // Validate dữ liệu mới
         $request->validate([
             'title' => 'required|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
-            // Bạn có thể mở rộng validate file ở đây nếu muốn cho họ up thêm file
         ]);
 
-        // Cập nhật thông tin
         $idea->title = $request->title;
         $idea->content = $request->input('content');
         $idea->category_id = $request->category_id;
-        // $idea->is_anonymous = $request->has('is_anonymous'); // Bỏ comment nếu cho phép đổi chế độ ẩn danh
-        
-        // 3. Xử lý File đính kèm (Nếu có up file mới)
-        if ($request->hasFile('document')) {
-            // (Tùy chọn) Có thể viết code xóa file cũ đi cho nhẹ server:
-            // if ($idea->document && \Storage::disk('public')->exists($idea->document)) {
-            //     \Storage::disk('public')->delete($idea->document);
-            // }
 
-            // Lưu file mới vào thư mục 'documents' trong storage/app/public
+        if ($request->hasFile('document')) {
             $path = $request->file('document')->store('documents', 'public');
-            
-            // Cập nhật đường dẫn mới vào Database (hoặc json_encode nếu team bạn lưu dạng JSON mảng)
-            $idea->document = $path; 
+            $idea->document = $path;
         }
 
         $idea->save();
-
-        // Trả về trang Profile kèm thông báo xanh lá
-        return redirect()->route('staff.profile')->with('success', 'Your idea has been updated successfully!');
+        return redirect()->route('staff.profile')->with('success', 'Cập nhật thành công!');
     }
 }

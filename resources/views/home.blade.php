@@ -60,15 +60,44 @@
                                     @endif
                                 </div>
 
+                                {{-- HIỂN THỊ FILE ĐÍNH KÈM (Chỉ thêm phần này) --}}
+                                {{-- ===== PHẦN MỚI: HIỂN THỊ FILE ĐÍNH KÈM ===== --}}
+                                @if($idea->document)
+                                    @php
+                                        // Giải mã JSON nếu nó là mảng file
+                                        $files = is_array($idea->document) ? $idea->document : json_decode($idea->document, true);
+                                    @endphp
+                                    @if(!empty($files))
+                                        <div class="d-flex flex-wrap gap-1 mb-3">
+                                            @foreach($files as $file)
+                                                {{-- Đã thay target="_blank" thành thuộc tính "download" để ép tải về --}}
+                                                <a href="{{ asset('storage/' . $file) }}" download="{{ basename($file) }}"
+                                                   class="badge bg-light text-secondary border text-decoration-none d-flex align-items-center px-2 py-1"
+                                                   title="Click to download file">
+                                                    <i class="bi bi-download me-1 text-primary"></i>
+                                                    <span class="text-truncate" style="max-width: 150px; font-weight: normal; font-size: 0.75rem;">
+                                                        {{ basename($file) }}
+                                                    </span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endif
+                                {{-- KẾT THÚC PHẦN FILE ĐÍNH KÈM --}}
+
                                 {{-- Interaction Buttons --}}
                                 <div class="d-flex align-items-center gap-3 border-top pt-2 mb-2">
                                     @auth
-                                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 1]) }}" class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-primary' : 'text-muted' }}">
+                                        {{-- NÚT LIKE ĐÃ FIX URL VÀ MÀU SẮC --}}
+                                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'like']) }}"
+                                           class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-success' : 'text-muted' }}">
                                             <i class="bi bi-hand-thumbs-up{{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? '-fill' : '' }} me-1"></i>
                                             <span class="small">{{ $idea->likes->where('type', 1)->count() }}</span>
                                         </a>
 
-                                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 0]) }}" class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
+                                        {{-- NÚT DISLIKE ĐÃ FIX URL VÀ MÀU SẮC --}}
+                                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'dislike']) }}"
+                                           class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
                                             <i class="bi bi-hand-thumbs-down{{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? '-fill' : '' }} me-1"></i>
                                             <span class="small">{{ $idea->likes->where('type', 0)->count() }}</span>
                                         </a>
@@ -78,7 +107,7 @@
                                             <span class="small">{{ $idea->comments->count() }}</span>
                                         </button>
                                     @else
-                                        {{-- Guest Buttons: Bấm vào bất kỳ cái nào cũng hiện Alert --}}
+                                        {{-- Guest Buttons --}}
                                         <button type="button" @click="showLoginAlert = true" class="btn btn-link p-0 text-decoration-none text-muted d-flex align-items-center border-0">
                                             <i class="bi bi-hand-thumbs-up me-1"></i>
                                             <span class="small">{{ $idea->likes->where('type', 1)->count() }}</span>
@@ -96,7 +125,7 @@
                                     @endauth
                                 </div>
 
-                                {{-- Unified Alert: Chỉ có một thanh thông báo duy nhất --}}
+                                {{-- Unified Alert --}}
                                 <div x-show="showLoginAlert" x-transition x-cloak class="mb-2">
                                     <div class="py-2 px-3 bg-white rounded-3 border d-flex align-items-center justify-content-between shadow-sm border-primary">
                                         <small class="text-muted" style="font-size: 0.65rem;">
@@ -122,19 +151,13 @@
 
                                     @auth
                                         @php
-                                            // Mặc định là cho phép comment
                                             $canComment = true;
-
-                                            // Kiểm tra logic:
-                                            // 1. Idea có thuộc năm học nào không?
-                                            // 2. Nếu có, ngày hiện tại đã vượt quá hạn đóng comment (Final Closure Date) chưa?
                                             if ($idea->academicYear && now() > $idea->academicYear->final_closure_date) {
                                                 $canComment = false;
                                             }
                                         @endphp
 
                                         @if($canComment)
-                                            {{-- TRƯỜNG HỢP 1: Còn hạn -> Hiển thị Form nhập bình thường --}}
                                             <form action="{{ route('comments.store', $idea->id) }}" method="POST" class="mt-2">
                                                 @csrf
                                                 <div class="input-group input-group-sm mb-1">
@@ -147,7 +170,6 @@
                                                 </div>
                                             </form>
                                         @else
-                                            {{-- TRƯỜNG HỢP 2: Hết hạn -> Ẩn Form, hiện thông báo khóa --}}
                                             <div class="mt-2 p-2 bg-light text-center rounded border">
                                                 <small class="text-danger fw-bold d-flex align-items-center justify-content-center gap-2">
                                                     <i class="bi bi-lock-fill"></i>
@@ -156,7 +178,6 @@
                                             </div>
                                         @endif
                                     @endauth
-                                    {{-- ĐÃ XÓA PHẦN @else THANH LOGIN CỐ ĐỊNH Ở ĐÂY --}}
                                 </div>
                             </div>
                         </div>

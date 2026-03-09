@@ -56,11 +56,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- BACKEND: Dùng vòng lặp @foreach ở đây --}}
+                            {{-- BACKEND: Đổ dữ liệu thật vào bảng --}}
+                            @foreach($contributorsByDept as $dept)
                             <tr>
-                                <td>[Department Name]</td>
-                                <td class="text-end fw-medium">[0]</td>
+                                <td>{{ $dept->department_name }}</td>
+                                <td class="text-end fw-medium">{{ $dept->users_count ?? 0 }}</td>
                             </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -75,10 +77,16 @@
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        {{-- BACKEND: Dùng vòng lặp @foreach ở đây --}}
+                        {{-- BACKEND: Vòng lặp lấy ý tưởng chưa ai bình luận --}}
+                        @forelse($ideasWithoutComments as $idea)
                         <li class="list-group-item px-0 border-0 small py-1 text-truncate">
-                            <a href="#" class="text-decoration-none text-dark hover-primary">[Idea Title Without Comments]</a>
+                            <a href="#" class="text-decoration-none text-dark hover-primary">{{ $idea->title }}</a>
                         </li>
+                        @empty
+                        <li class="list-group-item px-0 border-0 small py-1 text-muted">
+                            All ideas have comments! Amazing!
+                        </li>
+                        @endforelse
                     </ul>
                 </div>
             </div>
@@ -95,11 +103,11 @@
                         {{-- BACKEND: Đổ biến đếm tổng vào đây --}}
                         <li class="list-group-item px-0 border-0 small py-2 d-flex justify-content-between align-items-center">
                             <span class="text-secondary">Anonymous Ideas</span>
-                            <span class="badge bg-light text-dark border px-2 py-1">[0]</span>
+                            <span class="badge bg-light text-dark border px-2 py-1">{{ $anonymousIdeasCount }}</span>
                         </li>
                         <li class="list-group-item px-0 border-0 small py-2 d-flex justify-content-between align-items-center">
                             <span class="text-secondary">Anonymous Comments</span>
-                            <span class="badge bg-light text-dark border px-2 py-1">[0]</span>
+                            <span class="badge bg-light text-dark border px-2 py-1">{{ $anonymousCommentsCount }}</span>
                         </li>
                     </ul>
                 </div>
@@ -111,12 +119,11 @@
 {{-- SCRIPT VẼ BIỂU ĐỒ (CHART.JS) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // // ==========================================
-        // // KHU VỰC DÀNH CHO BACKEND (PHP SẼ ĐỔ DATA VÀO ĐÂY)
-        // {{-- Ví dụ: const depts = {!! json_encode($deptNamesArray) !!}; --}}
-        // // ==========================================
-        const depts = ['Dept A', 'Dept B', 'Dept C', 'Dept D']; // Mảng tên Khoa/Phòng ban
-        const ideasData = [10, 20, 30, 40]; // Mảng số lượng Idea tương ứng
+        // ==========================================
+        // BACKEND CHUYỂN DỮ LIỆU TỪ PHP SANG JAVASCRIPT
+        // ==========================================
+        const depts = {!! json_encode($deptNamesArray) !!};
+        const ideasData = {!! json_encode($ideasDataArray) !!};
 
         // Màu sắc mặc định cho biểu đồ tròn (Pie Chart)
         const bgColors = [
@@ -143,7 +150,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 } // Chỉnh stepSize để cột y hiển thị số nguyên
+                        }
+                    }
                 }
             });
         }

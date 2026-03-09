@@ -12,7 +12,7 @@
 
     <p>Please login to the system to review it.</p>
 
-    <p>Thank you,<br>
-    UIS System</p>
+    <p>Thank you,
+    <br>UIMS System</p>
 </body>
 </html>

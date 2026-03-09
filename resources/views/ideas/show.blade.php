@@ -45,20 +45,35 @@
 
                     <hr class="my-4">
 
-                    {{-- 3. KHU VỰC TƯƠNG TÁC (LIKE / DISLIKE) --}}
+                    {{-- 3. KHU VỰC TƯƠNG TÁC (LIKE / DISLIKE ĐÃ ĐƯỢC NÂNG CẤP) --}}
+                    @php
+                        // Đếm số lượng Like (type = 1) và Dislike (type = 0)
+                        $likeCount = $idea->likes->where('type', 1)->count();
+                        $dislikeCount = $idea->likes->where('type', 0)->count();
+
+                        // Kiểm tra xem User hiện tại đã bấm nút nào chưa để tô màu
+                        $userInteraction = null;
+                        if(Auth::check()) {
+                            $userInteraction = $idea->likes->where('user_id', Auth::id())->first();
+                        }
+                    @endphp
+
                     <div class="d-flex gap-2">
                         {{-- Nút Like --}}
-                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'like']) }}" class="btn btn-outline-success rounded-pill px-4">
-                            <i class="bi bi-hand-thumbs-up-fill"></i> Like
-                            <span class="fw-bold ms-1">{{ $idea->likes_count ?? 0 }}</span>
+                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'like']) }}"
+                           class="btn {{ $userInteraction && $userInteraction->type == 1 ? 'btn-success' : 'btn-outline-success' }} rounded-pill px-4">
+                            <i class="bi bi-hand-thumbs-up-fill me-1"></i> Like
+                            <span class="fw-bold ms-1">{{ $likeCount }}</span>
                         </a>
 
                         {{-- Nút Dislike --}}
-                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'dislike']) }}" class="btn btn-outline-danger rounded-pill px-4">
-                            <i class="bi bi-hand-thumbs-down-fill"></i> Dislike
-                            <span class="fw-bold ms-1">{{ $idea->dislikes_count ?? 0 }}</span>
+                        <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'dislike']) }}"
+                           class="btn {{ $userInteraction && $userInteraction->type == 0 ? 'btn-danger' : 'btn-outline-danger' }} rounded-pill px-4">
+                            <i class="bi bi-hand-thumbs-down-fill me-1"></i> Dislike
+                            <span class="fw-bold ms-1">{{ $dislikeCount }}</span>
                         </a>
 
+                        {{-- Lượt xem --}}
                         <span class="ms-auto text-muted align-self-center">
                             <i class="bi bi-eye"></i> {{ $idea->views ?? 0 }} Views
                         </span>

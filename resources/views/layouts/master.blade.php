@@ -157,13 +157,11 @@
         <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a>
     </li>
 
-    {{-- <li class="nav-item">
-        <a class="nav-link {{ request()->is('ideas*') || request()->is('all-ideas') ? 'active' : '' }}" href="/ideas">All Ideas</a>
-    </li> --}}
-
+    @if(Auth::check() && Auth::user()->hasRole(['QA Coordinator', 'Staff']))
     <li class="nav-item">
         <a class="nav-link {{ request()->is('create-idea') || request()->routeIs('ideas.create') ? 'active' : '' }}" href="{{ route('ideas.create') }}">Submit Idea</a>
     </li>
+    @endif
 </ul>
 
                 <ul class="navbar-nav ms-auto align-items-center pe-2">
@@ -178,10 +176,7 @@
                             // Lấy tên Role từ trong Object
                             $roleName = $user->role->role_name ?? $user->role;
 
-                            // 1. Check Admin
-                            // if ($roleName == 'Administrator' || $roleName == 'admin' || $roleName == 'Admin') {
-                            //     $panelRoute = route('admin.academic-years.index');
-                            // }
+
                             // Ở đoạn check quyền Admin:
                             if ($roleName == 'Administrator' || $roleName == 'admin' || $roleName == 'Admin') {
                             $panelRoute = route('admin.dashboard'); // Nhảy thẳng vào Dashboard mới tạo
@@ -221,34 +216,7 @@
                             @endif
                         @endif
                     @endauth
-                    {{-- --- KẾT THÚC LOGIC --- --}}
 
-                    {{-- @guest
-                        <li class="nav-item d-flex align-items-center ms-lg-3">
-    <a class="nav-link" href="/login">Login</a>
-</li>
-                    @else
-                        <li class="nav-item dropdown ms-lg-2 d-flex align-items-center">
-                            <a class="dropdown-toggle btn user-dropdown-btn px-3 py-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 0.75rem;">
-                                    {{ substr((Auth::user()->full_name ?? Auth::user()->name), 0, 1) }}
-                                </div>
-                                <span class="fw-medium">{{ Auth::user()->full_name ?? Auth::user()->name }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    @endguest --}}
                     @guest
     <li class="nav-item d-flex align-items-center ms-lg-3">
         <a class="nav-link" href="/login">Login</a>
