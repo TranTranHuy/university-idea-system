@@ -5,32 +5,191 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>University Idea System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <style>
+        /* Tùy chỉnh màu sắc và kích thước cho thanh gạt */
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .form-switch .form-check-input {
+            width: 2.5em;
+            cursor: pointer;
+        }
+
+        .form-check-label {
+            padding-left: 5px;
+            vertical-align: middle;
+        }
+
         body { background-color: #f8f9fa; }
+
+        /* Cố định Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1050 !important;
+        }
+
+        .dropdown-menu {
+            z-index: 2000 !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
         .footer { background-color: #343a40; color: white; padding: 20px 0; margin-top: 50px; }
         .hero-section { background-color: #e9ecef; border-radius: 0.3rem; }
+
+        /* Style cho nút Admin/Management */
+        .nav-admin {
+            background-color: #ffc107 !important;
+            color: #000 !important;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .nav-admin:hover { background-color: #e0a800 !important; }
+
+        .sticky-top { z-index: 1000 !important; }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">UIS SYSTEM</a>
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-lightbulb-fill"></i> University Idea System
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">All Ideas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Departments</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-light text-primary ms-2 px-3" href="/login">Login</a></li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('ideas.create') }}">Submit Idea</a>
+                    </li>
+
+                    {{-- --- BẮT ĐẦU LOGIC MANAGEMENT PANEL TỐI ƯU --- --}}
+                    @auth
+                        @php
+                            $user = Auth::user();
+                            $roleName = $user->role->role_name ?? $user->role;
+                        @endphp
+
+                        @if(in_array($user->role_id, [1, 2, 3]))
+
+                            {{-- 1. Nếu là Admin --}}
+                            @if($user->role_id == 1 || in_array($roleName, ['Administrator', 'Admin', 'admin']))
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> Admin Panel
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('admin.academic-years.index') }}">
+                                                <i class="bi bi-calendar-range me-2 text-primary"></i> Manage Academic Years
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('admin.users.index') }}">
+                                                <i class="bi bi-people-fill me-2 text-success"></i> Manage Users
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('statistics.index') }}">
+                                                <i class="bi bi-bar-chart-fill me-2 text-info"></i> View Statistics
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                            {{-- 2. Nếu là QA Manager --}}
+                            @elseif($user->role_id == 2 || $roleName == 'QA Manager')
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm dropdown-toggle" href="#" id="qamMenu" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-speedometer2 me-1"></i> QA Panel
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 mt-2">
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('qam.categories.index') }}">
+                                                <i class="bi bi-tags me-2 text-primary"></i> Manage Categories
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('qam.deadlines.index') }}">
+                                                <i class="bi bi-calendar-event me-2 text-danger"></i> Manage Deadlines
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="{{ route('statistics.index') }}">
+                                                <i class="bi bi-bar-chart-fill me-2 text-info"></i> View Statistics
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                            {{-- 3. Nếu là Coordinator --}}
+                            @elseif($user->role_id == 3 || in_array($roleName, ['Coordinator', 'QA Coordinator']))
+                                <li class="nav-item">
+                                    <a class="nav-link btn btn-warning text-dark fw-bold ms-lg-2 px-3 shadow-sm" href="{{ route('coordinator.dashboard') }}">
+                                        <i class="bi bi-speedometer2 me-1"></i> Management Panel
+                                    </a>
+                                </li>
+                            @endif
+                        @endif
+                    @endauth
+                    {{-- --- KẾT THÚC LOGIC --- --}}
+
+                    @guest
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white ms-lg-3 px-4" href="/login">Login</a>
+                        </li>
+                    @else
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="dropdown-toggle btn btn-outline-light px-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> Hi, {{ Auth::user()->full_name ?? Auth::user()->name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    @endguest
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4" style="min-height: 70vh;">
+        {{-- --- PHẦN HIỂN THỊ THÔNG BÁO --- --}}
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         @yield('content')
     </div>
 

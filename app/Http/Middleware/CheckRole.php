@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
@@ -16,11 +17,11 @@ class CheckRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
             // Kiểm tra nếu chưa đăng nhập -> đá về login
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return redirect('login');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Ví dụ: role 1 là Admin. 
         // Nếu yêu cầu quyền 'admin' mà user không phải id 1 -> Chặn ngay

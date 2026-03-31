@@ -12,25 +12,30 @@ class AuthController extends Controller
     // --- 1. XỬ LÝ ĐĂNG KÝ ---
     public function register(Request $request)
     {
-        // Kiểm tra dữ liệu đầu vào
+        // 1. Chỉ nhận và kiểm tra các dữ liệu cơ bản (Bỏ qua hoàn toàn role_id và department_id)
         $request->validate([
-            'full_name' => 'required',
-            'email' => 'required|email|unique:user',
-            'password' => 'required|min:6',
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:user,email', // Đảm bảo bảng của bạn là 'user'
+            'password' => 'required|string|min:6|confirmed', // Tự động so sánh với password_confirmation
         ]);
 
-        // Tạo User mới
-        User::create([
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => 1,       // Đảm bảo trong DB đã có Role ID 1
-            'department_id' => 1, // Đảm bảo trong DB đã có Dept ID 1
-            'is_agreed_terms' => 1
-        ]);
+        // 2. Tạo tài khoản mới
+        $user = new \App\Models\User();
+        $user->full_name = $request->full_name;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
 
-        // 👇 ĐÃ SỬA: Chuyển hướng về trang login thay vì hiện JSON
-        return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.');
+        // 🛡️ CHỐT CHẶN BẢO MẬT: ÉP BUỘC QUYỀN MẶC ĐỊNH LÀ STAFF 🛡️
+        $user->role_id = 4; // 4 là ID của Staff
+        $user->department_id = null; // Chưa thuộc khoa nào, đợi Admin phân công
+
+        $user->is_agreed_terms = $request->has('agree') ? 1 : 0;
+
+        // 3. Lưu vào Database
+        $user->save();
+
+        // 4. Chuyển hướng về trang Đăng nhập kèm thông báo chờ duyệt
+        return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng chờ Admin phân công phòng ban để bắt đầu nộp ý tưởng.');
     }
 
     // --- 2. XỬ LÝ ĐĂNG NHẬP ---
@@ -62,4 +67,5 @@ class AuthController extends Controller
         // Quay về trang login
         return redirect()->route('login');
     }
+
 }
