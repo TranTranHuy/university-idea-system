@@ -79,7 +79,6 @@
                 </div>
                 <div class="card-body pt-0">
                     <ul class="list-group list-group-flush">
-                        {{-- BACKEND: Vòng lặp lấy ý tưởng chưa ai bình luận --}}
                         @forelse($ideasWithoutComments as $idea)
                         <li class="list-group-item px-0 border-bottom py-2 d-flex justify-content-between align-items-center">
                             {{-- Phần Text bên trái --}}
@@ -110,7 +109,7 @@
             </div>
         </div>
 
-        {{-- Thống kê ẩn danh --}}
+
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100 rounded-4 border-info border-start border-4">
                 <div class="card-header bg-white border-0 pt-4 pb-0">
