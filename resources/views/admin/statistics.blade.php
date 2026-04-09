@@ -72,18 +72,36 @@
         {{-- Danh sách ý tưởng không có ai comment --}}
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100 rounded-4 border-warning border-start border-4">
-                <div class="card-header bg-white border-0 pt-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-exclamation-circle me-1"></i> Ideas Without Comment</h6>
+                <div class="card-header bg-white border-0 pt-4 pb-2">
+                    <h6 class="fw-bold mb-0 text-warning">
+                        <i class="bi bi-exclamation-circle me-1"></i> Ideas Without Comment
+                    </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body pt-0">
                     <ul class="list-group list-group-flush">
                         {{-- BACKEND: Vòng lặp lấy ý tưởng chưa ai bình luận --}}
                         @forelse($ideasWithoutComments as $idea)
-                        <li class="list-group-item px-0 border-0 small py-1 text-truncate">
-                            <a href="#" class="text-decoration-none text-dark hover-primary">{{ $idea->title }}</a>
+                        <li class="list-group-item px-0 border-bottom py-2 d-flex justify-content-between align-items-center">
+                            {{-- Phần Text bên trái --}}
+                            <div class="pe-3" style="min-width: 0;">
+                                <a href="{{ route('ideas.show', $idea->id) }}" class="text-decoration-none text-dark fw-medium d-block text-truncate mb-1" title="{{ $idea->title }}">
+                                    {{ $idea->title }}
+                                </a>
+                                {{-- Hiển thị thêm thời gian đăng --}}
+                                <div class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ $idea->created_at ? $idea->created_at->diffForHumans() : 'Unknown time' }}
+                                </div>
+                            </div>
+
+                            {{-- Nút mũi tên bên phải --}}
+                            <a href="{{ route('ideas.show', $idea->id) }}" class="btn btn-sm btn-light border text-warning rounded-circle d-flex justify-content-center align-items-center flex-shrink-0" style="width: 30px; height: 30px;" title="View Idea">
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
                         </li>
                         @empty
-                        <li class="list-group-item px-0 border-0 small py-1 text-muted">
+                        <li class="list-group-item px-0 border-0 small py-3 text-center text-muted">
+                            <i class="bi bi-check-circle text-success mb-2 fs-4 d-block"></i>
                             All ideas have comments! Amazing!
                         </li>
                         @endforelse

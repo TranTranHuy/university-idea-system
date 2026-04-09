@@ -14,6 +14,7 @@ use App\Models\User;
 use ZipArchive;
 use App\Mail\StaffIdeaSubmitted;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class IdeaController extends Controller
 {
@@ -27,7 +28,7 @@ class IdeaController extends Controller
             /** @var \App\Models\User $currentUser */
             $currentUser = Auth::user();
 
-            if ($currentUser->hasRole(['QA Coordinator', 'Staff'])) {
+            if ($currentUser->hasRole(['QA Coordinator'])) {
                 $query->whereHas('user', function ($q) use ($currentUser) {
                     $q->where('department_id', $currentUser->department_id);
                 });
@@ -62,11 +63,11 @@ class IdeaController extends Controller
                                  ->first();
 
         if (!$currentYear) {
-            return redirect()->back()->with('error', 'Lỗi: Hiện tại không có kỳ học nào đang mở.');
+            return redirect()->back()->with('error', 'Error: There is no academic year currently open.');
         }
 
         if (now() > $currentYear->closure_date) {
-            return redirect()->back()->with('error', 'Rất tiếc, đã quá hạn nộp ý tưởng!');
+            return redirect()->back()->with('error', 'Unfortunately, the deadline for submitting ideas has passed!');
         }
 
         $request->validate([
@@ -106,11 +107,11 @@ class IdeaController extends Controller
                 // Sửa lỗi: Đã đổi sang gửi StaffIdeaSubmitted cho đúng chức năng
                 Mail::to($coord->email)->send(new StaffIdeaSubmitted($idea));
             } catch (\Exception $e) {
-                \Log::error("Email QAC error: " . $e->getMessage());
+                Log::error("Email QAC error: " . $e->getMessage());
             }
         }
 
-        return redirect()->route('home')->with('success', 'Nộp ý tưởng thành công!');
+        return redirect()->route('home')->with('success', 'Idea submission successful!');
     }
 
     // --- 4. ADMIN XEM DANH SÁCH ---
@@ -133,15 +134,24 @@ class IdeaController extends Controller
             }
         }
         $idea->delete();
-        return redirect()->back()->with('success', 'Xóa ý tưởng thành công!');
+        return redirect()->back()->with('success', 'Idea deleted successfully!');
     }
 
     // --- 6. CHI TIẾT 1 IDEA ---
     public function show($id)
     {
-        $idea = Idea::with(['user', 'category', 'comments.user'])->findOrFail($id);
+        // 1. Tải Idea và các dữ liệu liên quan
+        $idea = Idea::with(['user', 'category', 'likes', 'comments.user'])->findOrFail($id);
+
+        // 2. TĂNG VIEW TRỰC TIẾP (Bỏ kiểm tra Session, cứ F5 là cộng)
+        $idea->increment('view_count');
+
+        // 3. Làm mới dữ liệu (Refresh) để hiển thị ngay con số vừa cộng lên view
+        $idea->refresh();
+
         return view('ideas.show', compact('idea'));
     }
+
 
     // --- 7. TẢI FILE CSV (CÓ LỌC PHÒNG BAN) ---
     public function exportCsv()
@@ -234,7 +244,7 @@ class IdeaController extends Controller
 
             if ($count === 0) {
                 if(file_exists($zipPath)) @unlink($zipPath);
-                return redirect()->back()->with('error', 'Không có tài liệu nào thuộc khoa của bạn.');
+                return redirect()->back()->with('error', 'No documents found for your department.');
             }
         }
         return response()->download($zipPath)->deleteFileAfterSend(true);
@@ -250,7 +260,7 @@ class IdeaController extends Controller
             $documents = is_array($decoded) ? $decoded : [$documents];
         }
 
-        if (empty($documents)) return redirect()->back()->with('error', 'Không có tệp đính kèm.');
+        if (empty($documents)) return redirect()->back()->with('error', 'No attached files found.');
 
         $zip = new ZipArchive;
         $fileName = 'Idea_' . $idea->id . '_files.zip';
@@ -304,7 +314,7 @@ class IdeaController extends Controller
                 }
             }
             $zip->close();
-            if (!$hasFiles) return back()->with('error', 'Không tìm thấy file nào.');
+            if (!$hasFiles) return back()->with('error', 'No files found.');
         }
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
@@ -313,8 +323,8 @@ class IdeaController extends Controller
     public function edit($id)
     {
         $idea = Idea::with('academicYear')->findOrFail($id);
-        if ($idea->user_id !== Auth::id()) return redirect()->back()->with('error', 'Từ chối quyền truy cập.');
-        if ($idea->academicYear && now() > $idea->academicYear->closure_date) return redirect()->back()->with('error', 'Đã quá hạn chỉnh sửa.');
+        if ($idea->user_id !== Auth::id()) return redirect()->back()->with('error', 'Access denied.');
+        if ($idea->academicYear && now() > $idea->academicYear->closure_date) return redirect()->back()->with('error', 'Deadline for editing has passed.');
 
         $categories = Category::all();
         return view('ideas.edit', compact('idea', 'categories'));
@@ -324,24 +334,36 @@ class IdeaController extends Controller
     public function update(Request $request, $id)
     {
         $idea = Idea::with('academicYear')->findOrFail($id);
-        if ($idea->user_id !== Auth::id() || ($idea->academicYear && now() > $idea->academicYear->closure_date)) abort(403);
+
+        if ($idea->user_id !== Auth::id() || ($idea->academicYear && now() > $idea->academicYear->closure_date)) {
+            abort(403);
+        }
 
         $request->validate([
             'title' => 'required|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
+            // Thêm validate cho file nếu có
+            'documents.*' => 'nullable|mimes:pdf,docx,jpg,png|max:2048',
         ]);
 
         $idea->title = $request->title;
         $idea->content = $request->input('content');
         $idea->category_id = $request->category_id;
 
-        if ($request->hasFile('document')) {
-            $path = $request->file('document')->store('documents', 'public');
-            $idea->document = $path;
+        // CẬP NHẬT LOGIC LƯU FILE TƯƠNG TỰ HÀM STORE
+        if ($request->hasFile('documents')) {
+            $filePaths = [];
+            foreach($request->file('documents') as $file) {
+                // Bạn có thể cân nhắc xóa file cũ ở Storage trước khi up file mới
+                // để tiết kiệm dung lượng server nhé
+                $path = $file->store('ideas', 'public');
+                $filePaths[] = $path;
+            }
+            $idea->document = $filePaths;
         }
 
         $idea->save();
-        return redirect()->route('staff.profile')->with('success', 'Cập nhật thành công!');
+        return redirect()->route('staff.profile')->with('success', 'Idea updated successfully!');
     }
 }

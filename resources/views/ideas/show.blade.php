@@ -75,7 +75,7 @@
 
                         {{-- Lượt xem --}}
                         <span class="ms-auto text-muted align-self-center">
-                            <i class="bi bi-eye"></i> {{ $idea->views ?? 0 }} Views
+                            <i class="bi bi-eye"></i> {{ $idea->view_count ?? 0 }} Views
                         </span>
                     </div>
                 </div>

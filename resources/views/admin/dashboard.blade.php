@@ -56,25 +56,27 @@
             <div class="card shadow-sm h-100 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-lightning-charge text-warning me-2"></i>Latest Ideas</h6>
-
-                    {{-- CHỨC NĂNG VIEW ALL (Sử dụng url('/') cho an toàn) --}}
-                    {{-- Ní có thể đổi '/home' thành đường dẫn đúng của trang danh sách Idea --}}
-                    <a href="{{ url('/') }}" class="text-decoration-none small fw-bold">View all</a>
+                    {{-- <a href="{{ url('/ideas') }}" class="text-decoration-none small fw-bold">View all</a> --}}
                 </div>
 
                 <ul class="list-group list-group-flush dashboard-list">
                     @forelse($latestIdeas as $idea)
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1 fw-medium text-dark">{{ Str::limit($idea->title, 40) }}</h6>
+                            <div class="pe-3">
+                                {{-- Tiêu đề giờ có thể click để xem chi tiết --}}
+                                <a href="{{ route('ideas.show', $idea->id) }}" class="text-decoration-none text-dark d-block mb-1">
+                                    <h6 class="mb-0 fw-medium text-dark table-hover">{{ Str::limit($idea->title, 40) }}</h6>
+                                </a>
                                 <small class="text-muted">By {{ $idea->user->full_name ?? 'Anonymous' }} • {{ $idea->created_at->diffForHumans() }}</small>
                             </div>
 
-                            {{-- NÚT DẤU + CHO LATEST IDEAS --}}
-                            <a href="{{ route('ideas.show', $idea->id) }}" class="btn btn-sm btn-warning bg-opacity-10 text-warning rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;" title="View Details">
-                                <i class="bi bi-plus-lg fw-bold"></i>
-                            </a>
+                            {{-- HIỂN THỊ SỐ LƯỢT XEM (VIEWS) --}}
+                            <div>
+                                <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill border border-warning border-opacity-25" title="Views">
+                                    <i class="bi bi-eye me-1"></i> {{ $idea->view_count ?? 0 }}
+                                </span>
+                            </div>
                         </div>
                     </li>
                     @empty
@@ -85,28 +87,33 @@
         </div>
 
         {{-- Khung Most Popular Ideas --}}
-        {{-- Khung Most Popular Ideas --}}
         <div class="col-lg-6">
             <div class="card shadow-sm h-100 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-fire text-danger me-2"></i>Most Popular Ideas</h6>
-
-                    {{-- THÊM NÚT VIEW ALL CHO BÊN POPULAR --}}
-                    <a href="{{ url('/') }}" class="text-decoration-none small fw-bold">View all</a>
+                    {{-- <a href="{{ url('/ideas') }}" class="text-decoration-none small fw-bold">View all</a> --}}
                 </div>
                 <ul class="list-group list-group-flush dashboard-list">
                     @forelse($popularIdeas as $idea)
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1 fw-medium text-dark">{{ Str::limit($idea->title, 40) }}</h6>
+                            <div class="pe-3">
+                                {{-- Tiêu đề giờ có thể click để xem chi tiết --}}
+                                <a href="{{ route('ideas.show', $idea->id) }}" class="text-decoration-none text-dark d-block mb-1">
+                                    <h6 class="mb-0 fw-medium text-dark">{{ Str::limit($idea->title, 40) }}</h6>
+                                </a>
                                 <small class="text-muted">{{ $idea->user->department->department_name ?? 'N/A' }}</small>
                             </div>
 
-                            {{-- NÚT DẤU + ĐỂ XEM CHI TIẾT --}}
-                            <a href="{{ route('ideas.show', $idea->id) }}" class="btn btn-sm btn-success bg-opacity-10 text-success rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;" title="View Details">
-                                <i class="bi bi-plus-lg fw-bold"></i>
-                            </a>
+                            {{-- HIỂN THỊ LIKE VÀ COMMENT --}}
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill border border-success border-opacity-25" title="Likes">
+                                    <i class="bi bi-hand-thumbs-up me-1"></i> {{ $idea->likes_count ?? 0 }}
+                                </span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill border border-primary border-opacity-25" title="Comments">
+                                    <i class="bi bi-chat-dots me-1"></i> {{ $idea->comments_count ?? 0 }}
+                                </span>
+                            </div>
                         </div>
                     </li>
                     @empty

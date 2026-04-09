@@ -44,21 +44,25 @@
                                     <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 align-self-start" style="font-size: 0.65rem;">{{ $idea->category->name ?? 'Chung' }}</span>
                                 </div>
 
-                                <h6 class="fw-bold text-dark text-truncate mb-1">{{ $idea->title }}</h6>
+                                {{-- Sửa Tiêu đề thành Link để bấm vào trang chi tiết --}}
+                                <a href="{{ route('ideas.show', $idea->id) }}" class="text-decoration-none text-dark">
+                                    <h6 class="fw-bold text-truncate mb-1 text-primary-hover">{{ $idea->title }}</h6>
+                                </a>
 
                                 {{-- Content --}}
-                                <div x-data="{ expanded: false }" class="flex-grow-1 mb-2">
-                                    <div class="text-secondary small idea-content-box" :class="expanded ? 'expanded-box' : ''" style="white-space: pre-line; font-size: 0.85rem;">
-                                        <span x-show="!expanded">{{ Str::limit($idea->content, 90) }}</span>
-                                        <span x-show="expanded" x-cloak>{{ $idea->content }}</span>
-                                    </div>
-                                    @if(strlen($idea->content) > 90)
-                                        <button @click="expanded = !expanded" class="btn btn-link p-0 fw-bold text-decoration-none small" style="font-size: 0.75rem;">
-                                            <span x-show="!expanded">See more</span>
-                                            <span x-show="expanded" x-cloak>Less</span>
-                                        </button>
-                                    @endif
+                                <div class="flex-grow-1 mb-2">
+                                <div class="text-secondary small" style="white-space: pre-line; font-size: 0.85rem;">
+                                    {{-- Giới hạn hiển thị 90 ký tự --}}
+                                    {{ Str::limit($idea->content, 90) }}
                                 </div>
+
+                                {{-- Nếu nội dung dài hơn 90 ký tự thì hiện link See more --}}
+                                @if(strlen($idea->content) > 90)
+                                    <a href="{{ route('ideas.show', $idea->id) }}" class="p-0 fw-bold text-decoration-none small text-primary d-inline-block mt-1" style="font-size: 0.75rem;">
+                                        See more <i class="bi bi-arrow-right-short"></i>
+                                    </a>
+                                @endif
+                            </div>
 
                                 {{-- HIỂN THỊ FILE ĐÍNH KÈM (Chỉ thêm phần này) --}}
                                 {{-- ===== PHẦN MỚI: HIỂN THỊ FILE ĐÍNH KÈM ===== --}}
@@ -88,16 +92,16 @@
                                 {{-- Interaction Buttons --}}
                                 <div class="d-flex align-items-center gap-3 border-top pt-2 mb-2">
                                     @auth
-                                        {{-- NÚT LIKE ĐÃ FIX URL VÀ MÀU SẮC --}}
+                                        {{-- NÚT LIKE --}}
                                         <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'like']) }}"
-                                           class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-success' : 'text-muted' }}">
+                                        class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? 'text-success' : 'text-muted' }}">
                                             <i class="bi bi-hand-thumbs-up{{ $idea->likes->where('user_id', Auth::id())->where('type', 1)->first() ? '-fill' : '' }} me-1"></i>
                                             <span class="small">{{ $idea->likes->where('type', 1)->count() }}</span>
                                         </a>
 
-                                        {{-- NÚT DISLIKE ĐÃ FIX URL VÀ MÀU SẮC --}}
+                                        {{-- NÚT DISLIKE --}}
                                         <a href="{{ route('idea.like', ['id' => $idea->id, 'type' => 'dislike']) }}"
-                                           class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
+                                        class="text-decoration-none d-flex align-items-center {{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? 'text-danger' : 'text-muted' }}">
                                             <i class="bi bi-hand-thumbs-down{{ $idea->likes->where('user_id', Auth::id())->where('type', 0)->first() ? '-fill' : '' }} me-1"></i>
                                             <span class="small">{{ $idea->likes->where('type', 0)->count() }}</span>
                                         </a>
@@ -123,6 +127,11 @@
                                             <span class="small">{{ $idea->comments->count() }}</span>
                                         </button>
                                     @endauth
+
+                                    {{-- ===== PHẦN MỚI: HIỂN THỊ LƯỢT XEM (ĐẨY SANG PHẢI) ===== --}}
+                                    <div class="ms-auto text-muted small d-flex align-items-center" title="Views">
+                                        <i class="bi bi-eye me-1"></i> {{ $idea->view_count ?? 0 }}
+                                    </div>
                                 </div>
 
                                 {{-- Unified Alert --}}
