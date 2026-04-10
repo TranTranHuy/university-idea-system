@@ -24,14 +24,19 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // 3. Lấy 5 ý tưởng phổ biến nhất (theo likes)
+        // 3. Lấy 5 ý tưởng phổ biến nhất (Most Popular)
+        // Tính theo công thức điểm: Like (+1) và Dislike (-1)
         $popularIdeas = Idea::with(['user.department'])
-            ->withCount(['likes', 'comments'])
-            ->orderBy('likes_count', 'desc')
+            ->withCount([
+                'likes as likes_count' => function ($q) { $q->where('type', 1); },
+                'likes as dislikes_count' => function ($q) { $q->where('type', 0); },
+                'comments' // Vẫn đếm số lượng comment để hiển thị ra View
+            ])
+            ->orderByRaw('(likes_count - dislikes_count) DESC') // Sắp xếp theo điểm giảm dần
             ->take(5)
             ->get();
 
-        // 4. Ý tưởng có comment gần nhất
+        // 4. Ý tưởng có comment gần nhất (Recently Active)
         $recentlyCommentedIdeas = Idea::with(['user.department'])
             ->withMax('comments', 'created_at')
             ->has('comments')
@@ -39,9 +44,10 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // 5. Ý tưởng có lượt xem cao nhất
+        // 5. Ý tưởng có lượt xem cao nhất (Most Viewed)
         $mostViewedIdeas = Idea::with(['user.department'])
-            ->orderBy('view_count', 'desc')
+            ->orderByRaw('COALESCE(view_count, 0) DESC') // COALESCE để tránh lỗi khi view_count là null
+            ->orderByDesc('created_at') // Nếu lượt xem bằng nhau thì ưu tiên bài mới hơn
             ->take(5)
             ->get();
 
