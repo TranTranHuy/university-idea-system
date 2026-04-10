@@ -35,7 +35,7 @@ class IdeaController extends Controller
                                     'likes as downvotes' => function ($q) { $q->where('type', 0); }
                                ])
                                ->orderByRaw('(upvotes - downvotes) DESC') // Sắp xếp theo điểm giảm dần
-                               ->paginate(10);
+                               ->paginate(6);
                 $sortTitle = 'Most Popular Ideas';
                 break;
 
@@ -44,7 +44,7 @@ class IdeaController extends Controller
                 $ideas = $query->withMax('comments', 'created_at')
                                ->has('comments')
                                ->orderByDesc('comments_max_created_at') // Sắp xếp theo thời gian comment giảm dần
-                               ->paginate(10);
+                               ->paginate(6);
                 $sortTitle = 'Newest Comments';
                 break;
 
@@ -52,20 +52,20 @@ class IdeaController extends Controller
                 // MOST VIEWED: Lượt xem giảm dần (thêm logic an toàn cho database)
                 $ideas = $query->orderByRaw('COALESCE(ideas.view_count, 0) DESC')
                                ->orderByDesc('created_at') // Nếu lượt xem bằng nhau thì bài nào mới hơn sẽ lên trước
-                               ->paginate(10);
+                               ->paginate(6);
                 $sortTitle = 'Most Viewed Ideas';
                 break;
 
             case 'latest':
                 // LATEST IDEAS
-                $ideas = $query->latest()->paginate(10);
+                $ideas = $query->latest()->paginate(6);
                 $sortTitle = 'Latest Ideas';
                 break;
 
             case 'default':
             default:
                 // DEFAULT
-                $ideas = $query->latest()->paginate(10);
+                $ideas = $query->latest()->paginate(6);
                 $sortTitle = 'All Ideas';
                 break;
         }
@@ -123,7 +123,10 @@ class IdeaController extends Controller
         $idea->category_id = $request->category_id;
         $idea->is_anonymous = $request->has('is_anonymous');
         $idea->academic_year_id = $currentYear->id;
-        $idea->document = $filePaths;
+
+        // ĐÃ CẬP NHẬT: Mã hóa mảng thành JSON để lưu chuẩn xác vào Database
+        $idea->document = json_encode($filePaths);
+
         $idea->save();
 
         // LOGIC GỬI MAIL: Tự động tìm QAC cùng khoa
@@ -135,7 +138,6 @@ class IdeaController extends Controller
 
         foreach ($coordinators as $coord) {
             try {
-                // Sửa lỗi: Đã đổi sang gửi StaffIdeaSubmitted cho đúng chức năng
                 Mail::to($coord->email)->send(new StaffIdeaSubmitted($idea));
             } catch (\Exception $e) {
                 Log::error("Email QAC error: " . $e->getMessage());
@@ -174,7 +176,7 @@ class IdeaController extends Controller
         // 1. Tải Idea và các dữ liệu liên quan
         $idea = Idea::with(['user', 'category', 'likes', 'comments.user'])->findOrFail($id);
 
-        // 2. TĂNG VIEW TRỰC TIẾP (Bỏ kiểm tra Session, cứ F5 là cộng)
+        // 2. TĂNG VIEW TRỰC TIẾP
         $idea->increment('view_count');
 
         // 3. Làm mới dữ liệu (Refresh) để hiển thị ngay con số vừa cộng lên view
@@ -374,7 +376,6 @@ class IdeaController extends Controller
             'title' => 'required|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
-            // Thêm validate cho file nếu có
             'documents.*' => 'nullable|mimes:pdf,docx,jpg,png|max:2048',
         ]);
 
@@ -386,12 +387,11 @@ class IdeaController extends Controller
         if ($request->hasFile('documents')) {
             $filePaths = [];
             foreach($request->file('documents') as $file) {
-                // Bạn có thể cân nhắc xóa file cũ ở Storage trước khi up file mới
-                // để tiết kiệm dung lượng server nhé
                 $path = $file->store('ideas', 'public');
                 $filePaths[] = $path;
             }
-            $idea->document = $filePaths;
+            // ĐÃ CẬP NHẬT: Mã hóa mảng thành JSON
+            $idea->document = json_encode($filePaths);
         }
 
         $idea->save();
