@@ -21,28 +21,59 @@ class IdeaController extends Controller
     // --- 1. TRANG DANH SÁCH IDEAS (TRANG CHỦ) ---
     public function index(Request $request)
     {
-        $query = Idea::with(['user', 'category', 'likes', 'comments.user']);
+        // Lấy tham số 'sort' từ URL, mặc định là 'latest'
+        $sortQuery = $request->input('sort', 'latest');
 
-        // CHÈN LOGIC LỌC PHÒNG BAN: Dùng hasRole thay vì ID gán cứng
-        if (Auth::check()) {
-            /** @var \App\Models\User $currentUser */
-            $currentUser = Auth::user();
+        // Tạo query cơ bản
+        $query = Idea::with(['user.department', 'category']);
 
-            if ($currentUser->hasRole(['QA Coordinator'])) {
-                $query->whereHas('user', function ($q) use ($currentUser) {
-                    $q->where('department_id', $currentUser->department_id);
-                });
-            }
+        switch ($sortQuery) {
+            case 'popular':
+                // MOST POPULAR: Điểm = (Tổng Like - Tổng Dislike)
+                $ideas = $query->withCount([
+                                    'likes as upvotes' => function ($q) { $q->where('type', 1); },
+                                    'likes as downvotes' => function ($q) { $q->where('type', 0); }
+                               ])
+                               ->orderByRaw('(upvotes - downvotes) DESC') // Sắp xếp theo điểm giảm dần
+                               ->paginate(10);
+                $sortTitle = 'Most Popular Ideas';
+                break;
+
+            case 'newest_comments':
+                // NEWEST COMMENTS: Có comment và ưu tiên comment gần đây nhất
+                $ideas = $query->withMax('comments', 'created_at')
+                               ->has('comments')
+                               ->orderByDesc('comments_max_created_at') // Sắp xếp theo thời gian comment giảm dần
+                               ->paginate(10);
+                $sortTitle = 'Newest Comments';
+                break;
+
+            case 'viewed':
+                // MOST VIEWED: Lượt xem giảm dần (thêm logic an toàn cho database)
+                $ideas = $query->orderByRaw('COALESCE(ideas.view_count, 0) DESC')
+                               ->orderByDesc('created_at') // Nếu lượt xem bằng nhau thì bài nào mới hơn sẽ lên trước
+                               ->paginate(10);
+                $sortTitle = 'Most Viewed Ideas';
+                break;
+
+            case 'latest':
+                // LATEST IDEAS
+                $ideas = $query->latest()->paginate(10);
+                $sortTitle = 'Latest Ideas';
+                break;
+
+            case 'default':
+            default:
+                // DEFAULT
+                $ideas = $query->latest()->paginate(10);
+                $sortTitle = 'All Ideas';
+                break;
         }
 
-        if ($request->sort == 'popular') {
-            $query->withCount('likes')->orderBy('likes_count', 'desc');
-        } else {
-            $query->latest();
-        }
+        // Đính kèm tham số bộ lọc vào link phân trang để khi bấm trang 2, 3 không bị lỗi
+        $ideas->appends(['sort' => $sortQuery]);
 
-        $ideas = $query->paginate(6);
-        return view('home', compact('ideas'));
+        return view('home', compact('ideas', 'sortQuery', 'sortTitle'));
     }
 
     // --- 2. TRANG ĐĂNG IDEA MỚI ---

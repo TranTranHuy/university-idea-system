@@ -124,5 +124,108 @@
         </div>
 
     </div>
+
+    {{-- PHẦN ĐƯỢC THÊM VÀO: RECENTLY ACTIVE & MOST VIEWED IDEAS --}}
+    <div class="row g-4 mb-4">
+
+        {{-- Khung Recently Active Ideas --}}
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 p-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-chat-left-dots-fill text-info me-2"></i>
+                        Recently Active Ideas
+                    </h6>
+                    <span class="badge bg-info bg-opacity-10 text-info small">
+                        Newest Comments
+                    </span>
+                </div>
+
+                <ul class="list-group list-group-flush dashboard-list">
+                    @forelse($recentlyCommentedIdeas as $idea)
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div class="pe-3">
+                                    <a href="{{ route('ideas.show', $idea->id) }}"
+                                       class="text-decoration-none text-dark d-block mb-1">
+                                        <h6 class="mb-0 fw-medium text-dark">
+                                            {{ Str::limit($idea->title, 40) }}
+                                        </h6>
+                                    </a>
+
+                                    <small class="text-muted">
+                                        {{ $idea->user->department->department_name ?? 'N/A' }}
+                                        • Last comment:
+                                        {{ \Carbon\Carbon::parse($idea->comments_max_created_at)->diffForHumans() }}
+                                    </small>
+                                </div>
+
+                                <span class="badge bg-light text-dark border px-2 py-1 rounded-pill"
+                                      title="Total Comments">
+                                    <i class="bi bi-chat-dots me-1"></i>
+                                    {{ $idea->comments_count ?? $idea->comments->count() }}
+                                </span>
+
+                            </div>
+                        </li>
+                    @empty
+                        <p class="text-muted small py-3">No recent activity.</p>
+                    @endforelse
+                </ul>
+
+            </div>
+        </div>
+
+        {{-- Khung Most Viewed Ideas --}}
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 p-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-eye-fill text-success me-2"></i>
+                        Most Viewed Ideas
+                    </h6>
+                </div>
+
+                <ul class="list-group list-group-flush dashboard-list">
+                    @forelse($mostViewedIdeas as $idea)
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div class="pe-3">
+                                    <a href="{{ route('ideas.show', $idea->id) }}"
+                                       class="text-decoration-none text-dark d-block mb-1">
+                                        <h6 class="mb-0 fw-medium text-dark">
+                                            {{ Str::limit($idea->title, 40) }}
+                                        </h6>
+                                    </a>
+
+                                    <small class="text-muted">
+                                        By {{ $idea->user->full_name ?? 'Anonymous' }}
+                                    </small>
+                                </div>
+
+                                {{-- HIỂN THỊ SỐ LƯỢT XEM --}}
+                                <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill border border-success border-opacity-25"
+                                      title="Views">
+                                    <i class="bi bi-eye me-1"></i>
+                                    {{ $idea->view_count ?? 0 }}
+                                </span>
+
+                            </div>
+                        </li>
+                    @empty
+                        <p class="text-muted small py-3">No viewed ideas yet.</p>
+                    @endforelse
+                </ul>
+
+            </div>
+        </div>
+
+    </div>
+    {{-- KẾT THÚC PHẦN ĐƯỢC THÊM VÀO --}}
+
 </div>
 @endsection
